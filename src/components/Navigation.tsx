@@ -2,7 +2,12 @@ import { Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export const Navigation = () => {
+interface NavigationProps {
+  currentView: 'search' | 'pitchBuilder' | 'catalogue';
+  onViewChange: (view: 'search' | 'pitchBuilder' | 'catalogue') => void;
+}
+
+export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
   return (
     <header className="border-b border-border bg-card">
       <div className="flex items-center justify-between px-6 py-4">
@@ -22,13 +27,25 @@ export const Navigation = () => {
 
         {/* Navigation Tabs */}
         <nav className="flex items-center gap-2">
-          <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+          <Button 
+            variant="ghost" 
+            className={currentView === 'search' ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
+            onClick={() => onViewChange('search')}
+          >
             Search
           </Button>
-          <Button variant="default" className="bg-primary/10 text-primary hover:bg-primary/20">
+          <Button 
+            variant={currentView === 'pitchBuilder' ? "default" : "ghost"}
+            className={currentView === 'pitchBuilder' ? "bg-primary/10 text-primary hover:bg-primary/20" : "text-muted-foreground hover:text-foreground"}
+            onClick={() => onViewChange('pitchBuilder')}
+          >
             Pitch Builder
           </Button>
-          <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+          <Button 
+            variant="ghost" 
+            className={currentView === 'catalogue' ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
+            onClick={() => onViewChange('catalogue')}
+          >
             Catalogue
           </Button>
         </nav>
