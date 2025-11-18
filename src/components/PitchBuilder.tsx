@@ -1,54 +1,87 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Paperclip } from "lucide-react";
+import { CheckCircle2, Loader2, Paperclip } from "lucide-react";
 
 const savedPitches = [
-  "Saved Song 1",
-  "Saved Song 2", 
-  "Saved Song 3",
-  "Saved Song 4",
-  "Saved Song 5",
+  "Stranger Things",
+  "The White Lotus", 
+  "Now You See Me: Now You Don't",
+  "Adidas",
+  "Lego Batman",
 ];
 
 const recommendedSongs = [
   {
     id: 1,
-    title: "Song Title",
-    artist: "Artist Name",
-    album: "Album Name",
-    producer: "Producer Name",
-    writer: "Writer Name",
-    licensing: "Licensing Details",
-    keywords: ["Keyword 1", "Keyword 2"],
-    duration: "00:00",
+    title: "Static Bloom",
+    artist: "Vela Noir",
+    album: "Neon Afterglow",
+    producer: "Harper Woldt",
+    writer: "Vela Noir",
+    licensing: "Master + Publishing Ready",
+    keywords: ["Glitch", "Ethereal", "Analog"],
+    duration: "03:06",
   },
   {
     id: 2,
-    title: "Song Title",
-    artist: "Artist Name",
-    album: "Album Name",
-    producer: "Producer Name",
-    writer: "Writer Name",
-    licensing: "Licensing Details",
-    keywords: ["Keyword 1", "Keyword 2"],
-    duration: "00:00",
+    title: "Ash Lanterns",
+    artist: "Orion Vale",
+    album: "Pale Signal",
+    producer: "Seraphine West",
+    writer: "Orion Vale",
+    licensing: "Pre-cleared",
+    keywords: ["Tension", "Noir", "Cinematic"],
+    duration: "04:28",
   },
   {
     id: 3,
-    title: "Song Title",
-    artist: "Artist Name",
-    album: "Album Name",
-    producer: "Producer Name",
-    writer: "Writer Name",
-    licensing: "Licensing Details",
-    keywords: ["Keyword 1", "Keyword 2"],
-    duration: "00:00",
+    title: "Moonlit Concrete",
+    artist: "Midnight Highrise",
+    album: "Grayscale Echoes",
+    producer: "Anika Rhee",
+    writer: "Anika Rhee",
+    licensing: "Master + Publishing",
+    keywords: ["Industrial", "Pulse", "Noir"],
+    duration: "03:12",
   },
 ];
 
 export const PitchBuilder = () => {
+  const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+
+  const handleExport = () => {
+    if (status === "loading") return;
+
+    setStatus("loading");
+
+    setTimeout(() => {
+      setStatus("success");
+
+      setTimeout(() => {
+        setStatus("idle");
+      }, 1800);
+    }, 1800);
+  };
+
   return (
-    <div className="flex h-[calc(100vh-200px)]">
+    <>
+      {status !== "idle" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur">
+          {status === "loading" ? (
+            <div className="flex flex-col items-center gap-4 text-center">
+              <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
+              <p className="text-lg font-medium text-foreground">Preparing your export…</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-4 text-center">
+              <CheckCircle2 className="h-16 w-16 text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]" />
+              <p className="text-xl font-semibold text-foreground">File saved to your computer</p>
+            </div>
+          )}
+        </div>
+      )}
+      <div className="flex h-[calc(100vh-200px)]">
       {/* Left Sidebar */}
       <aside className="w-64 bg-muted border-r border-border">
         <div className="p-4 space-y-2">
@@ -139,6 +172,8 @@ export const PitchBuilder = () => {
           <Button 
             size="lg" 
             className="bg-[#C4D82E] hover:bg-[#B5C929] text-black font-medium px-8"
+            onClick={handleExport}
+            disabled={status === "loading"}
           >
             Export
           </Button>
@@ -152,5 +187,6 @@ export const PitchBuilder = () => {
         </div>
       </main>
     </div>
+    </>
   );
 };

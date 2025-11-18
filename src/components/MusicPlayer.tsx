@@ -12,8 +12,8 @@ export const MusicPlayer = () => {
             🎵
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-primary font-medium truncate">Song Title</span>
-            <span className="text-muted-foreground text-sm truncate">Artist Name</span>
+            <span className="text-primary font-medium truncate">Trophies</span>
+            <span className="text-muted-foreground text-sm truncate">Drake</span>
           </div>
         </div>
 
