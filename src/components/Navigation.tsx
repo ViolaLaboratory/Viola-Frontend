@@ -31,19 +31,19 @@ const tabStyles = {
   search: {
     border: "border-[#C0C0C0]",
     text: "text-[#F7F8FF]",
-    hover: "hover:bg-[#C0C0C0]/20 hover:text-white",
+    hover: "transition-all duration-500 ease-in-out hover:bg-[#C0C0C0]/20 hover:text-white",
     active: "bg-[#C0C0C0]/10 text-foreground",
   },
   pitchBuilder: {
     border: "border-[#C4D82E]",
     text: "text-[#E5FFC2]",
-    hover: "hover:bg-[#F0FF5A] hover:text-[#1B1F05] hover:shadow-[0_0_18px_rgba(240,255,90,0.55)] hover:border-[#F0FF5A]",
+    hover: "transition-all duration-500 ease-in-out hover:bg-[#F0FF5A] hover:text-[#1B1F05] hover:shadow-[0_0_18px_rgba(240,255,90,0.55)] hover:border-[#F0FF5A]",
     active: "bg-[#C4D82E]/10 text-foreground",
   },
   catalogue: {
     border: "border-[#FF5A5F]",
     text: "text-[#FFC7CA]",
-    hover: "hover:bg-[#FF5A5F]/20 hover:text-[#771014]",
+    hover: "transition-all duration-500 ease-in-out hover:bg-[#FF1F2A] hover:text-black hover:shadow-[0_0_18px_rgba(255,90,95,0.55)] hover:border-[#FF1F2A]",
     active: "bg-[#FF5A5F]/10 text-foreground",
   },
 } satisfies Record<
@@ -53,7 +53,7 @@ const tabStyles = {
 
 export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
   return (
-    <header className="border-b border-border bg-card/95 backdrop-blur-md relative z-50">
+    <header className="border-b border-border bg-black backdrop-blur-md relative z-50">
       <div className="flex items-center px-6 py-4">
         <div className="flex items-center gap-6">
           <LogoMark />

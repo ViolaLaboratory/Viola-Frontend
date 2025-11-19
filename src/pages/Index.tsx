@@ -16,7 +16,7 @@ const Index = () => {
         {currentView === 'pitchBuilder' && <PitchBuilder />}
         {currentView === 'catalogue' && <MusicCatalog />}
       </main>
-      <MusicPlayer />
+      {(currentView === 'pitchBuilder' || currentView === 'catalogue') && (<MusicPlayer />)}
     </div>
   );
 };

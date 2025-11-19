@@ -17,6 +17,7 @@ const recommendedSongs = [
     title: "Static Bloom",
     artist: "Vela Noir",
     album: "Neon Afterglow",
+    thumbnail: "🎵",
     producer: "Harper Woldt",
     writer: "Vela Noir",
     licensing: "Master + Publishing Ready",
@@ -28,6 +29,7 @@ const recommendedSongs = [
     title: "Ash Lanterns",
     artist: "Orion Vale",
     album: "Pale Signal",
+    thumbnail: "🎵",
     producer: "Seraphine West",
     writer: "Orion Vale",
     licensing: "Pre-cleared",
@@ -39,6 +41,7 @@ const recommendedSongs = [
     title: "Moonlit Concrete",
     artist: "Midnight Highrise",
     album: "Grayscale Echoes",
+    thumbnail: "🎵",
     producer: "Anika Rhee",
     writer: "Anika Rhee",
     licensing: "Master + Publishing",
@@ -138,7 +141,7 @@ export const PitchBuilder = () => {
               >
                 {/* Top Row */}
                 <div className="flex items-center gap-4 mb-3">
-                  <div className="w-12 h-12 bg-muted rounded"></div>
+                <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-2xl">{song.thumbnail}</div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <span className="text-foreground font-medium">{song.title}</span>

@@ -4,7 +4,7 @@ import { Slider } from "@/components/ui/slider";
 
 export const MusicPlayer = () => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-player border-t border-border px-6 py-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-border px-6 py-4">
       <div className="flex items-center justify-between gap-8">
         {/* Current Track Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
