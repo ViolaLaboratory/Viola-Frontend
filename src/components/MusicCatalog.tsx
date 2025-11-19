@@ -18,7 +18,7 @@ interface Song {
 const songs: Song[] = [
   {
     id: 1,
-    title: "Touch (ft. YEONJUN of TOMORROW X...",
+    title: "new Phone, new Me",
     artist: "Neon District",
     album: "Chromatic Bloom",
     genre: "Pop",
@@ -30,7 +30,7 @@ const songs: Song[] = [
   },
   {
     id: 2,
-    title: "Talk to You",
+    title: "Up the Score",
     artist: "Tidal Echo",
     album: "Heartline",
     genre: "Pop",
@@ -42,7 +42,7 @@ const songs: Song[] = [
   },
   {
     id: 3,
-    title: "Let Me Tell You (feat. Daniela of KATSE...",
+    title: "Z Branch",
     artist: "City Lanterns",
     album: "After Hours",
     genre: "R&B",
@@ -54,7 +54,7 @@ const songs: Song[] = [
   },
   {
     id: 4,
-    title: "GGUM",
+    title: "Right Here",
     artist: "Blushing Violet",
     album: "Midnight Bloom",
     genre: "Hip Hop",
@@ -66,7 +66,7 @@ const songs: Song[] = [
   },
   {
     id: 5,
-    title: "Coma",
+    title: "John Wick",
     artist: "Axiom Fields",
     album: "Nocturne Drive",
     genre: "Electronic",
