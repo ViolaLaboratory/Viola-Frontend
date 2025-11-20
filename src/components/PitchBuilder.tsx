@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Loader2, Paperclip } from "lucide-react";
+import { CheckCircle2, Loader2, Paperclip, MoreHorizontal } from "lucide-react";
+import { MusicPlayer } from "./MusicPlayer";
 
 const savedPitches = [
-  "Stranger Things",
+  "Stranger Things background song search",
   "The White Lotus", 
   "Now You See Me: Now You Don't",
   "Adidas",
@@ -84,44 +85,49 @@ export const PitchBuilder = () => {
           )}
         </div>
       )}
-      <div className="flex h-[calc(100vh-200px)]">
+      <div className="flex min-h-screen">
       {/* Left Sidebar */}
-      <aside className="w-64 bg-muted border-r border-border">
+      <aside className="w-64 bg-muted sticky top-[74px] self-start h-[700px] border-r border-border bg-[linear-gradient(to_bottom,#000,#14166C)]">
         <div className="p-4 space-y-2">
           {savedPitches.map((pitch, index) => (
-            <button
+            <div
               key={index}
-              className={`w-full text-left px-4 py-3 rounded-md transition-colors ${
+              className={`group w-full flex items-center justify-between px-4 py-3 rounded-md transition-colors cursor-pointer ${
                 index === 0
-                  ? "bg-secondary/50 text-foreground"
-                  : "text-muted-foreground hover:bg-secondary/30"
+                  ? "bg-secondary text-foreground"
+                  : "text-muted-foreground hover:bg-secondary"
               }`}
             >
-              {pitch}
-            </button>
+              <span className="truncate">{pitch}</span>
+              <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-secondary rounded">
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </div>
           ))}
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto px-8 py-6">
+      <main className="flex-1 overflow-y-auto px-8 py-10 pb-28">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <h1 className="text-4xl font-medium text-foreground">Stranger Things</h1>
-            <Badge variant="outline" className="border-destructive text-destructive px-4 py-1 text-sm">
-              Netflix
-            </Badge>
-            <Badge variant="outline" className="border-border text-foreground px-4 py-1 text-sm flex items-center gap-1">
-              <Paperclip className="h-3 w-3" />
-              Brief
-            </Badge>
+        <div className="">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h1 className="text-4xl font-medium text-foreground font-dm">Stranger Things background song search</h1>
+              <Badge variant="outline" className="border-border text-foreground px-4 py-1 text-sm flex items-center gap-1">
+                <Paperclip className="h-3 w-3" />
+                Brief
+              </Badge>
+            </div>
+            <div className="flex items-center justify-center">
+              <span className="text-white font-dm text-lg py-2 px-6 bg-red-600 rounded-full ">Netflix</span>
+            </div>
           </div>
 
           {/* Description */}
           <div>
-            <h2 className="text-xl text-muted-foreground mb-3">Description</h2>
-            <div className="bg-muted/30 rounded-lg p-6">
+            <h2 className="text-xl text-white mb-3 font-dm">Description</h2>
+            <div className="bg-black rounded-lg p-6 mb-6">
               <p className="text-muted-foreground leading-relaxed">
                 Based on the brief, we recommend the following two songs for the suspenseful scene where lead girl and
                 lead boy are chased in the woods at 00:11:02 of S1E3 of Stranger Things on Netflix.
@@ -132,8 +138,8 @@ export const PitchBuilder = () => {
 
         {/* Songs Section */}
         <div>
-          <h2 className="text-xl text-muted-foreground mb-4">Songs</h2>
-          <div className="space-y-3">
+          <h2 className="text-xl text-white mb-4 font-dm">Songs</h2>
+          <div className="space-y-3 z-1">
             {recommendedSongs.map((song) => (
               <div
                 key={song.id}
@@ -190,6 +196,7 @@ export const PitchBuilder = () => {
         </div>
       </main>
     </div>
+    <MusicPlayer />
     </>
   );
 };

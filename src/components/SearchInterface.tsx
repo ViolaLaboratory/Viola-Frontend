@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Plus, Play, X, Check } from "lucide-react";
+import { Loader2, Plus, Play, X, Check, ArrowRight } from "lucide-react";
 import { PitchBuilder } from "./PitchBuilder"; // Import your existing PitchBuilder
 
 interface Song {
@@ -69,6 +69,20 @@ const mockSongs: Song[] = [
   }
 ];
 
+const typingPhrases = [
+  "spooky choirs...",
+  "dark synths...",
+  "a spicy melody...",
+  "cinematic builds..."
+];
+
+const thinkingPhrases = [
+  "humming along...",
+  "arguing with managers...",
+  "going for lunch..."
+];
+
+
 const availablePitches = [
   { id: 1, name: "Stranger Things", company: "Netflix", color: "bg-red-500", description: "S1E3 Woods Scene" },
   { id: 2, name: "The White Lotus", company: "HBO Max", color: "bg-purple-500", description: "Season 2 Resort Scenes" },
@@ -126,6 +140,70 @@ export const SearchInterface = () => {
     }, 2000);
   };
 
+  const [placeholderText, setPlaceholderText] = useState("Find ");
+  const [thinkingText, setThinkingText] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Thinking text animation effect - runs when loading
+  useEffect(() => {
+    if (!isLoading) {
+      setThinkingText("");
+      return;
+    }
+
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+
+    const intervalId = setInterval(() => {
+      const phrase = thinkingPhrases[phraseIndex];
+      setThinkingText(phrase.slice(0, charIndex));
+
+      if (!deleting) {
+        charIndex++;
+        if (charIndex > phrase.length) {
+          deleting = true;
+        }
+      } else {
+        charIndex--;
+        if (charIndex === 0) {
+          deleting = false;
+          phraseIndex = (phraseIndex + 1) % thinkingPhrases.length;
+        }
+      }
+    }, deleting ? 90 : 100);
+
+    return () => clearInterval(intervalId);
+  }, [isLoading]);
+
+  // Placeholder text animation effect
+  useEffect(() => {
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+
+    const intervalId = setInterval(() => {
+      const phrase = typingPhrases[phraseIndex];
+      setPlaceholderText(`Find me ${phrase.slice(0, charIndex)}`);
+
+      if (!deleting) {
+        charIndex++;
+        if (charIndex > phrase.length) {
+          deleting = true;
+          setTimeout(() => {}, 2000);
+        }
+      } else {
+        charIndex--;
+        if (charIndex === 0) {
+          deleting = false;
+          phraseIndex = (phraseIndex + 1) % typingPhrases.length;
+        }
+      }
+    }, deleting ? 400 : 170);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   const addToPitch = (song: Song) => {
     setSelectedSong(song);
     setShowPitchSelection(true);
@@ -142,19 +220,31 @@ export const SearchInterface = () => {
 
   return (
     <div className="min-h-screen zen-dots fluid-bg relative overflow-hidden" style={containerStyle}>
+      {/* Noise texture overlay */}
+      <svg className="noise-overlay">
+        <filter id="noiseFilter">
+          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" stitchTiles="stitch" />
+        </filter>
+        <rect width="100%" height="300%" filter="url(#noiseFilter)" />
+      </svg>
+
       <style>
         {`
-          @import url('https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
 
           .zen-dots,
           .zen-dots .song-card * {
-            font-family: 'Inter', system-ui, sans-serif !important;
+            font-family: 'Dm Sans', system-ui, sans-serif !important;
+          }
+
+          .inter {
+            font-family: 'Inter', system-ui, sans-serif;
           }
 
           .fluid-bg {
             position: relative;
             z-index: 0;
-            background-color: #0b021d;
+            background-color:rgb(0, 0, 0);
           }
 
           .fluid-bg::before,
@@ -168,12 +258,12 @@ export const SearchInterface = () => {
           .fluid-bg::before {
             z-index: -2;
             background-image: url('/viola.jpg');
-            background-size: 180% 180%;
+            background-size: 200% 200%;
             background-repeat: no-repeat;
             background-position: var(--bg-x, 50%) var(--bg-y, 50%);
-            filter: blur(32px) saturate(1.25);
+            filter: blur(22px) saturate(2);
             transform: translate(var(--bg-tx, 0px), var(--bg-ty, 0px)) scale(1.3);
-            transition: transform 0.35s ease-out, background-position 0.25s ease-out, filter 0.3s ease;
+            transition: transform 0.35s ease-out, filter 0.3s ease;
             opacity: 0.9;
           }
 
@@ -186,14 +276,28 @@ export const SearchInterface = () => {
                 rgba(122, 35, 204, 0.55) 42%,
                 rgba(22, 4, 47, 0.8) 70%),
               radial-gradient(circle at calc(var(--bg-x, 50%) - 10%) calc(var(--bg-y, 50%) - 12%),
-                rgba(60, 200, 255, 0.35),
+                rgba(0, 0, 0, 0.35),
                 transparent 45%),
               linear-gradient(120deg, rgba(16, 0, 32, 0.95), rgba(45, 3, 81, 0.95));
             mix-blend-mode: screen;
             filter: blur(22px);
-            opacity: 0.85;
+            opacity: 0.9;
             transform: translate(calc(var(--bg-tx, 0px) * 1.2), calc(var(--bg-ty, 0px) * 1.2));
             transition: transform 0.25s ease-out, opacity 0.3s ease-out;
+            weight: 10%;
+            height: 100%;
+          }
+
+          /* Noise overlay */
+          .fluid-bg > .noise-overlay {
+            position: fixed;
+            inset: -5;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.9;
+            mix-blend-mode: overlay;
           }
 
           @keyframes fade-in {
@@ -221,21 +325,27 @@ export const SearchInterface = () => {
             }
           }
           .glow-border {
-            background: linear-gradient(120deg, #c084fc, #6366f1, #a855f7, #ec4899, #c084fc);
+            background: linear-gradient(120deg,rgba(249, 249, 249, 0.18),rgba(255, 255, 255, 0.43),rgba(202, 145, 255, 0.27),rgba(255, 210, 233, 0.4),rgba(231, 208, 255, 0.23));
             background-size: 300% 300%;
             animation: border-glow 6s linear infinite;
             padding: 1px;
             border-radius: 999px;
-            box-shadow: 0 0 20px rgba(148, 0, 211, 0.25);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.79);
+          }
+
+          .glow-border:hover {
+            background: white;
+            padding: 1px;
+            transition: all 0.2s ease-in-out;
           }
         `}
       </style>
 
       {/* Loading State - Center of Screen */}
       {isLoading && (
-        <div className="fixed inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm z-40">
-          <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-6"></div>
-          <p className="text-muted-foreground text-lg">Searching for the perfect tracks...</p>
+        <div className="fixed inset-0 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm z-40">
+          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mb-6"></div>
+          <p className="text-white text-lg">{thinkingText}<span className="animate-pulse">|</span></p>
         </div>
       )}
 
@@ -244,20 +354,27 @@ export const SearchInterface = () => {
         {showResults && !isLoading && (
           <div className="px-6 pt-8 pb-4 animate-fade-in">
             <div className="max-w-7xl mx-auto">
-              <div className="mb-6">
-                <h2 className="text-2xl font-semibold mb-2">
-                  Top 5 Songs
+              <div className="flex items-center content-start mb-6">
+                <img
+                  src="/flower.png"
+                  alt="Viola"
+                  className={`transition-all duration-900 h-12 w-12 mr-3 self-start rounded-full animate-pulse object-cover`}
+                />
+                <h2 className="text-2xl w-lg font-semibold">
+                  Let me know if these are the top songs that sound like your search for "{searchQuery}"".
                 </h2>
-                <p className="text-muted-foreground">
-                  Ranked by relevance • {mockSongs.length} results
-                </p>
+              </div>
+              <div className="flex justify-self-end mb-2">
+                <p className="text-sm text-white bg-black w-fit p-3 rounded-full bg-black/80">
+                    Ranked by relevance • {mockSongs.length} results
+                  </p>
               </div>
 
-              <div className="space-y-3 mb-8">
+              <div className="space-y-3 mb-8 z-8">
                 {mockSongs.map((song, index) => (
                  <Card 
                  key={song.id} 
-                 className="transition-all duration-200 hover:shadow-md hover:shadow-purple-500/10 cursor-pointer border hover:bg-muted/30"
+                 className="transition-all duration-500 bg-black/80 hover:shadow-lg hover:shadow-purple-500/10 cursor-pointer border hover:bg-muted/20 hover:backdrop-blur-lg"
                  onClick={() => addToPitch(song)}
                  style={{ fontFamily: 'Inter, system-ui, sans-serif !important' }}
                >
@@ -271,15 +388,19 @@ export const SearchInterface = () => {
                         </div>
 
                         {/* Album Art Placeholder */}
-                        <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-blue-400 rounded-lg flex-shrink-0 flex items-center justify-center">
-                          <Play className="h-6 w-6 text-white" />
+                        <div className="w-16 h-16 bg-gradient-to-br from-purple-800 to-orange-900 rounded-lg flex-shrink-0 flex items-center justify-center">
+                          <img 
+                          src="/NoteAlbumArt.png"
+                          alt="Album Art"
+                          className="rounded-sm"
+                          />
                         </div>
 
                         {/* Song Details */}
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 inter">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="font-semibold text-lg">{song.title}</h3>
-                            <span className="text-muted-foreground italic">{song.artist}</span>
+                            <span className="text-muted-foreground italic">{song.artist}</span>  • 
                             <span className="text-foreground">{song.album}</span>
                             {/* <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                               {song.relevanceScore}% match
@@ -294,10 +415,10 @@ export const SearchInterface = () => {
                         </div>
 
                         {/* Keywords and Duration */}
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 z-5">
                           <div className="flex gap-2">
                             {song.keywords.slice(0, 2).map((keyword, idx) => (
-                              <Badge key={idx} variant="secondary" className="bg-purple-100 text-purple-800">
+                              <Badge key={idx} variant="secondary" className="bg-orange-500 text-white">
                                 {keyword}
                               </Badge>
                             ))}
@@ -309,7 +430,7 @@ export const SearchInterface = () => {
                               e.stopPropagation();
                               addToPitch(song);
                             }}
-                            className="bg-[#E4EA04] hover:bg-[#B5C929] text-black font-medium"
+                            className="transition all duration-600 ease-in-out bg-[#E4EA04] hover:bg-black text-black hover:text-[#E4EA04] font-medium"
                           >
                             <Plus className="h-4 w-4 mr-1" />
                             Add to Pitch
@@ -335,8 +456,8 @@ export const SearchInterface = () => {
           
           {/* Title - disappears when searched */}
           {!hasSearched && (
-            <h1 className="text-4xl font-medium text mb-8">
-              What would you like to listen to today?
+            <h1 className="text-4xl font-light text mb-8">
+              what are we making today, Michael?
             </h1>
           )}
 
@@ -344,43 +465,69 @@ export const SearchInterface = () => {
           <form onSubmit={handleSearch} className="w-full max-w-2xl mx-auto transition-all duration-700">
             <div className="glow-border">
               <div className="relative">
-                <Input 
+                <img
+                  src="/flower.png"
+                  alt="Viola"
+                  className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full object-cover transition-all duration-300 ${
+                    isSearchFocused ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
+                  }`}
+                />
+                <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Find me an eerie, suspenseful soundtrack for a scene in the woods" 
-                  className="h-14 text-base border-0 bg-card focus-visible:ring-0 rounded-full px-6 pr-12 shadow-lg shadow-purple-500/30 transition-all duration-300"
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  placeholder={placeholderText}
+                  className={`h-14 text-base border-0 bg-card focus-visible:ring-white rounded-full shadow-lg hover:border-white  shadow-white-500/30 transition-all duration-300 ${
+                    isSearchFocused ? 'pl-16 pr-14' : 'pl-6 pr-6'
+                  }`}
                   disabled={isLoading}
                 />
                 {isLoading && (
                   <Loader2 className="absolute right-6 top-1/2 transform -translate-y-1/2 h-5 w-5 animate-spin text-purple-500" />
                 )}
+                {!isLoading && isSearchFocused && (
+                  <ArrowRight className={`absolute right-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white transition-all duration-300 ${
+                    isSearchFocused ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
+                  }`} />
+                )}
               </div>
             </div>
+
+            {/* Tagline - only visible when not searched */}
+            {!hasSearched && (
+              <p className="text-center text-white/30 text-sm mt-4 tracking-wide">
+                locate, listen, license.
+              </p>
+            )}
           </form>
         </div>
       </div>
 
       {/* Pitch Selection Modal */}
       {showPitchSelection && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm drop-shadow-sm flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto border">
             <div className="p-6 border-b border-border">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold">Add to Pitch</h2>
+                <h2 className="text-2xl font-semibold font-dm">Add to Pitch</h2>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowPitchSelection(false)}
                   className="rounded-full"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4 w-4 m-2 hover:bg-[#e4ea04]" />
                 </Button>
               </div>
               
               {selectedSong && (
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-400 rounded-lg flex items-center justify-center">
-                    <Play className="h-4 w-4 text-white" />
+                <div className="flex content-center gap-3 p-3 bg-muted/50 rounded-sm">
+                  <div className="w-12 h-12 bg-gradient-to-br flex items-center justify-center">
+                    <img
+                    src="/NoteAlbumArt.png"
+                    alt="Album Art"
+                    className="rounded-sm w-full h-full"/>
                   </div>
                   <div>
                     <div className="font-medium">{selectedSong.title}</div>
@@ -397,9 +544,9 @@ export const SearchInterface = () => {
                   <button
                     key={pitch.id}
                     onClick={() => selectPitch(pitch)}
-                    className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-transparent hover:border-purple-200 hover:bg-purple-50/50 transition-all duration-200 text-left group"
+                    className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-transparent hover:border-purple-200 hover:bg-purple-50/10 transition-all duration-200 text-left group"
                   >
-                    <div className={`w-12 h-12 ${pitch.color} rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
+                    <div className={`w-12 h-12 ${pitch.color} rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
                       {pitch.name.charAt(0)}
                     </div>
                     <div className="flex-1">
@@ -407,8 +554,8 @@ export const SearchInterface = () => {
                       <div className="text-sm text-muted-foreground">{pitch.company} • {pitch.description}</div>
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                        <Check className="h-4 w-4 text-white" />
+                      <div className="w-8 h-8 bg-[#E4EA04] rounded-full flex items-center justify-center">
+                        <Check className="h-4 w-4 text-black" />
                       </div>
                     </div>
                   </button>

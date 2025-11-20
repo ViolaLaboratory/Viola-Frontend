@@ -357,16 +357,16 @@ const songs: Song[] = [
 
 export const MusicCatalog = () => {
   return (
-    <div className="w-full max-h-[calc(100vh-140px)] min-h-[60vh] overflow-y-auto rounded-xl border border-border bg-card/60">
+    <div className="bg-black w-full max-h-[calc(100vh-140px)] min-h-[60vh] overflow-y-auto rounded-xl border border-border bg-card/60 mt-6">
       {/* Table Header */}
       <div className="sticky top-0 z-10 grid grid-cols-[40px_60px_1fr_200px_120px_120px_120px_80px] gap-4 px-6 py-3 border-b border-border text-sm text-muted-foreground font-medium bg-card/90 backdrop-blur">
         <div>#</div>
         <div></div>
         <div>Title</div>
-        <div>Album</div>
-        <div>Genre</div>
-        <div>Mood</div>
-        <div>Licensing</div>
+        <div className="justify-self-center">Album</div>
+        <div className="justify-self-center">Genre</div>
+        <div className="justify-self-center">Mood</div>
+        <div className="justify-self-center">Licensing</div>
         <div className="text-right">Duration</div>
       </div>
 
@@ -395,24 +395,24 @@ export const MusicCatalog = () => {
             </div>
 
             {/* Album */}
-            <div className="text-foreground text-sm truncate">{song.album}</div>
+            <div className="text-foreground text-center text-sm truncate">{song.album}</div>
 
             {/* Genre Badge */}
-            <div>
+            <div className="flex justify-self-center">
               <Badge variant="secondary" className="bg-badge-genre/20 text-badge-genre border-0 hover:bg-badge-genre/30">
                 {song.genre}
               </Badge>
             </div>
 
             {/* Mood Badge */}
-            <div>
+            <div className="flex justify-self-center">
               <Badge variant="secondary" className="bg-badge-mood/20 text-badge-mood border-0 hover:bg-badge-mood/30">
                 {song.mood}
               </Badge>
             </div>
 
             {/* Licensing Badge */}
-            <div>
+            <div className="flex justify-self-center">
               <Badge variant="secondary" className="bg-badge-licensing/20 text-badge-licensing border-0 hover:bg-badge-licensing/30">
                 {song.licensing}
               </Badge>
@@ -421,10 +421,10 @@ export const MusicCatalog = () => {
             {/* Duration & Actions */}
             <div className="flex items-center justify-end gap-2">
               <span className="text-muted-foreground text-sm">{song.duration}</span>
-              <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Plus className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </div>
