@@ -361,7 +361,7 @@ export const SearchInterface = () => {
                   className={`transition-all duration-900 h-12 w-12 mr-3 self-start rounded-full animate-pulse object-cover`}
                 />
                 <h2 className="text-2xl w-lg font-semibold">
-                  Let me know if these are the top songs that sound like your search for "{searchQuery}"".
+                  Let me know if these are the top songs that sound like your search for "{searchQuery}".
                 </h2>
               </div>
               <div className="flex justify-self-end mb-2">

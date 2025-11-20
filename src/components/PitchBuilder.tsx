@@ -5,7 +5,7 @@ import { CheckCircle2, Loader2, Paperclip, MoreHorizontal } from "lucide-react";
 import { MusicPlayer } from "./MusicPlayer";
 
 const savedPitches = [
-  "Stranger Things background song search",
+  "Stranger Things",
   "The White Lotus", 
   "Now You See Me: Now You Don't",
   "Adidas",
@@ -113,7 +113,7 @@ export const PitchBuilder = () => {
         <div className="">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h1 className="text-4xl font-medium text-foreground font-dm">Stranger Things background song search</h1>
+              <h1 className="text-4xl font-medium text-foreground font-dm">Stranger Things</h1>
               <Badge variant="outline" className="border-border text-foreground px-4 py-1 text-sm flex items-center gap-1">
                 <Paperclip className="h-3 w-3" />
                 Brief
