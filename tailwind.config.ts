@@ -16,7 +16,8 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
-        dm: ['"DM Sans"', 'sans-serif'],
+        dm: ['"DM Sans"', 'Zen Dots'],
+        zen: ['"Zen Dots"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -96,10 +97,45 @@ export default {
             height: "0",
           },
         },
+        "fade-in-up": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(30px) scale(0.95)",
+            filter: "blur(10px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0) scale(1)",
+            filter: "blur(0)",
+          },
+        },
+        "glow-rotate": {
+          "0%": {
+            boxShadow: "0 0 0px rgba(228,234,4,0)",
+          },
+          "100%": {
+            boxShadow: "0 0 20px rgba(228,234,4,1), 0 0 40px rgba(228,234,4,0.6)",
+          },
+        },
+        "flip-up": {
+          "0%": {
+            opacity: "0",
+            transform: "perspective(1000px) rotateX(-90deg)",
+            transformOrigin: "bottom",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "perspective(1000px) rotateX(0deg)",
+            transformOrigin: "bottom",
+          },
+        },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "accordion-down": "accordion-down 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "accordion-up": "accordion-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "fade-in-up": "fade-in-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "glow-rotate": "glow-rotate 0.4s ease-out forwards",
+        "flip-up": "flip-up 2s cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },
     },
   },
