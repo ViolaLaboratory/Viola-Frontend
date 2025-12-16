@@ -27,16 +27,18 @@ function doPost(e) {
 
     // Add headers if this is the first row
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(['Timestamp', 'First Name', 'Last Name', 'Email', 'Relation to Music Industry', 'Favorite Song']);
+      sheet.appendRow(['Timestamp', 'User ID', 'First Name', 'Last Name', 'Email', 'Relation to Music Industry', 'Team Size', 'Favorite Song']);
     }
 
     // Append the data to the sheet
     sheet.appendRow([
       new Date(),
+      data.userId || 'N/A',
       data.firstName,
       data.lastName,
       data.email,
       data.relation,
+      data.teamSize || '1',
       data.favoriteSong
     ]);
 

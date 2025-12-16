@@ -1,4 +1,4 @@
-import { useRef, useState, MouseEvent } from "react";
+import { useRef, useState, MouseEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,8 +47,28 @@ const ThankYou = () => {
   // URL for sharing the waitlist page
   const waitlistUrl = window.location.origin + "/waitlist";
 
-  // Pre-written text for social media sharing
-  const shareText = "Join me on the Viola waitlist - the future of AI-powered music discovery!";
+  // Pre-written share text for different platforms
+  const shareMessages = {
+    twitter: "Just joined the @ViolaLabs waitlist! 🎵\n\nViola is building AI-powered music discovery for sync teams—helping tastemakers find, shortlist, and clear the right track in under 30 minutes.\n\nIf you work in sync, this is for you:",
+    linkedin: "Excited to join the Viola waitlist!\n\nViola is revolutionizing music discovery for sync professionals with AI that understands natural language searches—no more endless scrolling or keyword guessing.\n\nKey features:\n• Find tracks in seconds with conversational search\n• Smart curation tools that learn your taste\n• Integrated licensing workflow\n\nIf you're in sync/music supervision, check it out:",
+    facebook: "Just joined the Viola waitlist! 🎵 If you work in music sync or supervision, you need to see this—AI-powered search that actually understands what you're looking for. From brief to cleared track in under 30 minutes.",
+    email: `Hi there,
+
+I just joined the Viola waitlist and thought you might be interested!
+
+Viola is an AI music workspace built specifically for sync teams and music supervisors. It helps you find, shortlist, and clear the right track without losing your day or sanity.
+
+Key features:
+• Natural language search - just describe what you need
+• Smart curation tools that remember your taste
+• Integrated licensing workflow
+
+If you work in sync, this could be a game-changer.
+
+Check it out: ${waitlistUrl}
+
+Best,`,
+  };
 
   // React Router navigation hook
   const navigate = useNavigate();
@@ -66,30 +86,53 @@ const ThankYou = () => {
   };
 
   /**
-   * Opens social media share dialog for the specified platform
-   * @param platform - "twitter", "linkedin", or "facebook"
+   * Opens social media share dialog for the specified platform with pre-filled text
+   * @param platform - "twitter", "linkedin", "facebook", or "email"
    */
-  const handleSocialShare = (platform: string) => {
+  const handleSocialShare = (platform: keyof typeof shareMessages) => {
     let shareUrl = "";
-    const encodedText = encodeURIComponent(shareText);
+    const message = shareMessages[platform];
     const encodedUrl = encodeURIComponent(waitlistUrl);
 
     switch (platform) {
       case "twitter":
-        shareUrl = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+        // Twitter combines text and URL in the text parameter
+        const twitterText = `${message}\n${waitlistUrl}`;
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}`;
         break;
       case "linkedin":
+        // LinkedIn only takes URL, text is not pre-fillable via URL
+        // Users will need to add their own text, but we can show a suggestion
         shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        // Note: LinkedIn doesn't support pre-filled text via URL parameters
         break;
       case "facebook":
+        // Facebook only takes URL in the share dialog
         shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        break;
+      case "email":
+        // Email with pre-filled subject and body
+        const subject = "Check out Viola - AI Music Discovery for Sync";
+        shareUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
         break;
     }
 
     if (shareUrl) {
-      window.open(shareUrl, "_blank", "noopener,noreferrer");
+      if (platform === "email") {
+        window.location.href = shareUrl;
+      } else {
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+      }
     }
   };
+
+  /**
+   * Scrolls to top of page on mount
+   * Ensures users see the confirmation message when navigating from waitlist form
+   */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   /**
    * Creates a radial gradient effect that follows the mouse cursor on buttons
@@ -207,14 +250,15 @@ const ThankYou = () => {
             {/* Social Share Buttons */}
             <div>
               <label className="text-sm text-white mb-3 block">
-                Share on social media
+                Share with your network
               </label>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <Button
                   onClick={() => handleSocialShare("twitter")}
                   variant="outline"
                   size="lg"
-                  className="w-full sm:flex-1 border-white/20 transition duration-300 ease-in-out text-white hover:bg-white/10"
+                  title="Share on Twitter with pre-filled message"
+                  className="border-white/20 transition duration-300 ease-in-out text-white hover:bg-white/10"
                 >
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -225,7 +269,8 @@ const ThankYou = () => {
                   onClick={() => handleSocialShare("linkedin")}
                   variant="outline"
                   size="lg"
-                  className="w-full sm:flex-1 border-white/20 transition duration-300 ease-in-out text-white hover:bg-white/10"
+                  title="Share on LinkedIn"
+                  className="border-white/20 transition duration-300 ease-in-out text-white hover:bg-white/10"
                 >
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
@@ -236,14 +281,17 @@ const ThankYou = () => {
                   onClick={() => handleSocialShare("facebook")}
                   variant="outline"
                   size="lg"
-                  className="w-full sm:flex-1 border-white/20 transition duration-300 ease-in-out text-white hover:bg-white/10"
+                  title="Share on Facebook"
+                  className="border-white/20 transition duration-300 ease-in-out text-white hover:bg-white/10"
                 >
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
                   </svg>
                   Facebook
                 </Button>
+                
               </div>
+             
             </div>
           </div>
 

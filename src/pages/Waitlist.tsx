@@ -60,6 +60,7 @@ const Waitlist = () => {
     email: "",
     relation: "",
     favoriteSong: "",
+    teamSize: "1", // Default to individual
   });
 
   /**
@@ -74,6 +75,17 @@ const Waitlist = () => {
   };
 
   /**
+   * Generates a unique user ID for tracking
+   * Format: VLA-YYYYMMDD-XXXXX (e.g., VLA-20240115-A3B9C)
+   */
+  const generateUserId = (): string => {
+    const date = new Date();
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+    const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
+    return `VLA-${dateStr}-${randomStr}`;
+  };
+
+  /**
    * Submits the waitlist form to Google Apps Script
    * The script saves data to Google Sheets and sends a confirmation email
    * Note: Uses no-cors mode so we can't read the response status
@@ -83,16 +95,22 @@ const Waitlist = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Generate unique user ID for this submission
+    const userId = generateUserId();
+
     try {
       // Submit to Google Apps Script
       // This endpoint saves to Google Sheets and sends confirmation email
-      await fetch("https://script.google.com/macros/s/AKfycbyjHUI0iZT3TWzlizAbsAqmUOPI8ECh88DmGvAF8o5xULlnIv0Setkx02TCVYUDD4Jp/exec", {
+      await fetch("https://script.google.com/macros/s/AKfycbwLtWmvYhJOfFPQpCy4BoSRKVOYkEMZJLd5WYjgbrLMIQ9QsA690ZQN4X83I0YE-8eq/exec", {
         method: "POST",
         mode: "no-cors",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          userId, // Include the unique user ID
+        }),
       });
 
       // Navigate to thank you page
@@ -261,11 +279,38 @@ const Waitlist = () => {
               />
             </div>
 
+            <div className="space-y-2 flip-up" style={{ animationDelay: "330ms" }}>
+              <Label htmlFor="teamSize" className="text-white font-medium">
+                Team Size <span className="text-[#e4ea04]">*</span>
+              </Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { value: "1", label: "Just Me" },
+                  { value: "2-5", label: "2-5 people" },
+                  { value: "6-20", label: "6-20 people" },
+                  { value: "20+", label: "20+ people" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, teamSize: option.value }))}
+                    className={`px-4 py-3 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      formData.teamSize === option.value
+                        ? "bg-[#EE481F] text-white shadow-[0_0_15px_rgba(228,234,4,0.4)]"
+                        : "bg-white/5 text-white border border-white/20 hover:border-[#EE481F]/50 hover:bg-white/10"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <Button
               type="submit"
               disabled={isSubmitting}
               className="w-full bg-[#e4ea04] text-black hover:bg-[#e4ea04]/90 hover:shadow-[0_0_20px_rgba(228,234,4,0.4),0_0_40px_rgba(228,234,4,0.2)] py-6 text-lg font-medium transition duration-500 flip-up"
-              style={{ animationDelay: "360ms" }}
+              style={{ animationDelay: "390ms" }}
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
