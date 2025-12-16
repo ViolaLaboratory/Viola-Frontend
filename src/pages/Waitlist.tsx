@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, MouseEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import Footer from "@/components/Footer";
 import AnimatedVLogo from "@/components/AnimatedVLogo";
 
+/**
+ * LogoMark Component
+ * Displays the Viola logo SVG used in the header
+ */
 const LogoMark = () => (
   <svg
     viewBox="0 0 72 55"
@@ -29,9 +33,27 @@ const LogoMark = () => (
   </svg>
 );
 
+/**
+ * Waitlist Page Component
+ * Displays the waitlist signup form with animated elements
+ * Features:
+ * - Animated form fields with staggered entrance
+ * - Form validation for required fields
+ * - Submits to Google Apps Script for processing
+ * - Sends confirmation email to users (via Apps Script)
+ * - Navigates to thank you page on success
+ */
 const Waitlist = () => {
+  // React Router navigation hook
   const navigate = useNavigate();
+
+  // Refs for button hover effects (currently unused but kept for future enhancements)
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Form submission loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form field values
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -40,6 +62,9 @@ const Waitlist = () => {
     favoriteSong: "",
   });
 
+  /**
+   * Updates form state when user types in any input field
+   */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -48,12 +73,19 @@ const Waitlist = () => {
     }));
   };
 
+  /**
+   * Submits the waitlist form to Google Apps Script
+   * The script saves data to Google Sheets and sends a confirmation email
+   * Note: Uses no-cors mode so we can't read the response status
+   * See docs/EMAIL_CONFIRMATION_SETUP.md for setup instructions
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // TODO: Replace with your Google Sheets API endpoint
+      // Submit to Google Apps Script
+      // This endpoint saves to Google Sheets and sends confirmation email
       await fetch("https://script.google.com/macros/s/AKfycbyjHUI0iZT3TWzlizAbsAqmUOPI8ECh88DmGvAF8o5xULlnIv0Setkx02TCVYUDD4Jp/exec", {
         method: "POST",
         mode: "no-cors",
@@ -74,26 +106,82 @@ const Waitlist = () => {
     }
   };
 
+  /**
+   * Scrolls to top of page on mount
+   * Ensures users see the form header when navigating from other pages
+   */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  /**
+   * Creates a radial gradient effect that follows the mouse cursor on buttons
+   * Updates CSS custom properties (--mouse-x, --mouse-y) for the gradient position
+   */
+  const handleMouseMove = (e: MouseEvent<HTMLButtonElement>, index: number) => {
+    const button = buttonRefs.current[index];
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    button.style.setProperty("--mouse-x", `${x}px`);
+    button.style.setProperty("--mouse-y", `${y}px`);
+  };
+
   return (
     <div className="min-h-screen bg-black text-foreground flex flex-col">
-      
+      <style>
+        {`
+          @keyframes flip-up {
+            0% { opacity: 0; transform: translateY(14px) rotateX(10deg); transform-origin: top; }
+            60% { opacity: 1; transform: translateY(-2px) rotateX(0deg); }
+            100% { opacity: 1; transform: translateY(0) rotateX(0deg); }
+          }
+          .flip-up {
+            animation: flip-up 620ms cubic-bezier(0.23, 0.92, 0.35, 1) both;
+          }
+        `}
+      </style>
+      {/* Simple nav back to landing */}
+      <header className="flex items-center justify-between px-6 py-6 sticky top-0 bg-black/30 backdrop-blur-xl border-b border-white/10 z-50">
+        <div className="flex items-center gap-3">
+          <LogoMark />
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            ref={(el) => (buttonRefs.current[0] = el)}
+            onMouseMove={(e) => handleMouseMove(e, 0)}
+            className="group relative transition duration-500 ease-in-out hover:cursor-pointer rounded-2xl border border-white px-6 py-2 font-medium bg-transparent text-white min-w-[150px] hover:border-[#e4ea04] hover:text-black hover:bg-[#e4ea04] overflow-hidden before:absolute before:inset-0 before:rounded-2xl before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:bg-[radial-gradient(circle_80px_at_var(--mouse-x)_var(--mouse-y),rgba(228,234,4,0.15),transparent)]"
+            onClick={() => navigate("/")}
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              Back to landing
+            </span>
+          </Button>
+        </div>
+      </header>
+
       {/* Form Section */}
-      <main className="flex-1 flex items-center justify-center px-6 py-12 pt-24">
+      <main className="flex-1 flex items-center justify-center px-6 py-12 pt-24 font-dm">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             {/* Logo */}
             <div className="flex justify-center mb-8 py-4">
-              <AnimatedVLogo />
+              <div className="">
+                <AnimatedVLogo/>
+              </div>
             </div>
 
             <h1 className="font-zen text-3xl md:text-4xl font-bold mb-3 text-white">Join the Waitlist</h1>
             <p className="font-dm text-white/80">
-              Be among the first to experience the future of music discovery
+              Be among the first to experience the future of music discovery.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
+            <div className="space-y-2 flip-up" style={{ animationDelay: "60ms" }}>
               <Label htmlFor="firstName" className="text-white font-medium">
                 First Name <span className="text-[#e4ea04]">*</span>
               </Label>
@@ -109,7 +197,7 @@ const Waitlist = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 flip-up" style={{ animationDelay: "120ms" }}>
               <Label htmlFor="lastName" className="text-white font-medium">
                 Last Name <span className="text-[#e4ea04]">*</span>
               </Label>
@@ -125,7 +213,7 @@ const Waitlist = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 flip-up" style={{ animationDelay: "180ms" }}>
               <Label htmlFor="email" className="text-white font-medium">
                 Email <span className="text-[#e4ea04]">*</span>
               </Label>
@@ -141,7 +229,7 @@ const Waitlist = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 flip-up" style={{ animationDelay: "240ms" }}>
               <Label htmlFor="relation" className="text-white font-medium">
                 Relation to the Music Industry <span className="text-[#e4ea04]">*</span>
               </Label>
@@ -157,7 +245,7 @@ const Waitlist = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 flip-up" style={{ animationDelay: "300ms" }}>
               <Label htmlFor="favoriteSong" className="text-white font-medium">
                 Favorite Song <span className="text-[#e4ea04]">*</span>
               </Label>
@@ -176,7 +264,8 @@ const Waitlist = () => {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-[#e4ea04] text-black hover:bg-[#e4ea04]/90 hover:shadow-[0_0_20px_rgba(228,234,4,0.4),0_0_40px_rgba(228,234,4,0.2)] py-6 text-lg font-medium transition duration-500"
+              className="w-full bg-[#e4ea04] text-black hover:bg-[#e4ea04]/90 hover:shadow-[0_0_20px_rgba(228,234,4,0.4),0_0_40px_rgba(228,234,4,0.2)] py-6 text-lg font-medium transition duration-500 flip-up"
+              style={{ animationDelay: "360ms" }}
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
@@ -184,7 +273,7 @@ const Waitlist = () => {
         </div>
       </main>
 
-      <Footer animated={false} showCTA={true} />
+      <Footer />
     </div>
   );
 };

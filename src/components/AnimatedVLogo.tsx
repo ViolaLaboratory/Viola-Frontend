@@ -1,9 +1,31 @@
 import React from 'react';
 
+/**
+ * AnimatedVLogo Component
+ *
+ * Displays an animated Viola logo with color-shifting gradient and glow effects
+ *
+ * Features:
+ * - Vertical gradient wave that moves through the logo (10s loop)
+ * - Color transitions: Black → Purple → Orange → Yellow → Orange → Purple → Black
+ * - Pulsing glow effect synchronized with the color wave
+ * - Uses SVG masks for precise logo shape rendering
+ *
+ * Animation Details:
+ * - gradient-wave: Translates gradient position vertically (ease-in-out, 10s)
+ * - glow-pulse: Animates drop shadow intensity with color transitions (ease-in-out, 10s)
+ * - Both animations loop infinitely and are synchronized
+ *
+ * Performance Considerations:
+ * - Uses CSS transforms for smooth 60fps animation
+ * - SVG-based for scalability without quality loss
+ * - Optimized gradient stops for smooth color transitions
+ */
 const AnimatedVLogo: React.FC = () => {
   return (
     <>
       <style>{`
+        /* Vertically translates the gradient through the logo */
         @keyframes gradient-wave {
           0% {
             transform: translateY(-150%);
@@ -13,43 +35,52 @@ const AnimatedVLogo: React.FC = () => {
           }
         }
 
+        /* Pulses the glow effect with color transitions matching the gradient */
         @keyframes glow-pulse {
           0% {
             filter: drop-shadow(0 0 0px rgba(0, 0, 0, 0));
           }
-          15% {
-            filter: drop-shadow(0 0 8px rgba(75, 13, 181, 0.2));
+          10% {
+            filter: drop-shadow(0 0 6px rgba(75, 13, 181, 0.15));
+          }
+          20% {
+            filter: drop-shadow(0 0 12px rgba(75, 13, 181, 0.28));
           }
           30% {
-            filter: drop-shadow(0 0 15px rgba(75, 13, 181, 0.35));
+            filter: drop-shadow(0 0 16px rgba(75, 13, 181, 0.35));
           }
-          45% {
-            filter: drop-shadow(0 0 20px rgba(255, 85, 0, 0.4));
+          40% {
+            filter: drop-shadow(0 0 18px rgba(238, 72, 31, 0.38));
           }
           50% {
-            filter: drop-shadow(0 0 25px rgba(255, 230, 0, 0.45));
+            filter: drop-shadow(0 0 22px rgba(228, 234, 4, 0.42));
           }
-          55% {
-            filter: drop-shadow(0 0 20px rgba(255, 85, 0, 0.4));
+          60% {
+            filter: drop-shadow(0 0 18px rgba(238, 72, 31, 0.38));
           }
           70% {
-            filter: drop-shadow(0 0 15px rgba(75, 13, 181, 0.35));
+            filter: drop-shadow(0 0 16px rgba(75, 13, 181, 0.35));
           }
-          85% {
-            filter: drop-shadow(0 0 8px rgba(75, 13, 181, 0.2));
+          80% {
+            filter: drop-shadow(0 0 12px rgba(75, 13, 181, 0.28));
+          }
+          90% {
+            filter: drop-shadow(0 0 6px rgba(75, 13, 181, 0.15));
           }
           100% {
             filter: drop-shadow(0 0 0px rgba(0, 0, 0, 0));
           }
         }
 
+        /* Applied to the SVG element for the glow effect */
         .v-logo-animated {
-          animation: glow-pulse 10s linear infinite;
+          animation: glow-pulse 10s ease-in-out infinite;
         }
 
+        /* Applied to the gradient rectangle that shows through the mask */
         .animated-gradient {
-          animation: gradient-wave 10s linear infinite;
-          opacity: 0.85;
+          animation: gradient-wave 10s ease-in-out infinite;
+          opacity: 0.9;
           filter: blur(0px);
         }
       `}</style>
@@ -66,13 +97,17 @@ const AnimatedVLogo: React.FC = () => {
           <linearGradient id="heatWaveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#000000" />
             <stop offset="5%" stopColor="#000000" />
-            <stop offset="15%" stopColor="#000000" />
-            <stop offset="30%" stopColor="#4b0db5" />
-            <stop offset="42%" stopColor="#EE481F" />
+            <stop offset="12%" stopColor="#000000" />
+            <stop offset="20%" stopColor="#1a0533" />
+            <stop offset="28%" stopColor="#4b0db5" />
+            <stop offset="36%" stopColor="#8b2fa0" />
+            <stop offset="44%" stopColor="#EE481F" />
             <stop offset="50%" stopColor="#E4EA04" />
-            <stop offset="58%" stopColor="#E4EA04" />
-            <stop offset="70%" stopColor="#EE481F" />
-            <stop offset="85%" stopColor="#000000" />
+            <stop offset="56%" stopColor="#EE481F" />
+            <stop offset="64%" stopColor="#8b2fa0" />
+            <stop offset="72%" stopColor="#4b0db5" />
+            <stop offset="80%" stopColor="#1a0533" />
+            <stop offset="88%" stopColor="#000000" />
             <stop offset="95%" stopColor="#000000" />
             <stop offset="100%" stopColor="#000000" />
           </linearGradient>
