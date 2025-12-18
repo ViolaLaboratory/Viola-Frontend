@@ -1,0 +1,326 @@
+import { useRef, useState, MouseEvent, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import Footer from "@/components/Footer";
+import AnimatedVLogo from "@/components/AnimatedVLogo";
+
+/**
+ * LogoMark Component
+ * Displays the Viola logo SVG used in the header
+ */
+const LogoMark = () => (
+  <svg
+    viewBox="0 0 72 55"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-8 w-auto drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]"
+  >
+    <path
+      d="M35.1375 54.8993C35.0844 55.8883 32.5205 49.348 31.3059 46.0832C30.7393 44.5589 36.4796 44.8638 38.059 44.4916C43.6789 43.1622 55.2446 38.3589 56.4097 21.2373C56.9727 12.96 47.7159 9.45769 47.7974 5.56189C47.9143 1.0616e-06 55.6802 0.127614 55.6802 0.127614L69.3741 0C71.2723 0.0460832 72.5223 1.98867 71.7857 3.73983L50.9491 53.2438C50.5277 54.2435 49.5503 54.8922 48.4667 54.8922H35.1375V54.8993Z"
+      fill="white"
+    />
+    <path
+      d="M16.1494 4.20421L37.6163 51.4359C38.3635 53.0807 37.0604 54.8993 35.1339 54.8993H24.8396C23.7559 54.8993 22.7786 54.2966 22.3572 53.375L1.23368 4.20421"
+      fill="white"
+    />
+    <path
+      d="M23.4124 53.5274L0.213799 4.07659C-0.533402 2.38215 0.769773 0.506915 2.69621 0.506915H12.9906C14.0742 0.506915 15.0516 1.12727 15.473 2.08083L37.8324 52.7582"
+      fill="white"
+    />
+  </svg>
+);
+
+/**
+ * Waitlist Page Component
+ * Displays the waitlist signup form with animated elements
+ * Features:
+ * - Animated form fields with staggered entrance
+ * - Form validation for required fields
+ * - Submits to Google Apps Script for processing
+ * - Sends confirmation email to users (via Apps Script)
+ * - Navigates to thank you page on success
+ */
+const Waitlist = () => {
+  // React Router navigation hook
+  const navigate = useNavigate();
+
+  // Refs for button hover effects (currently unused but kept for future enhancements)
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Form submission loading state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form field values
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    relation: "",
+    favoriteSong: "",
+    teamSize: "1", // Default to individual
+  });
+
+  /**
+   * Updates form state when user types in any input field
+   */
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  /**
+   * Generates a unique user ID for tracking
+   * Format: VLA-YYYYMMDD-XXXXX (e.g., VLA-20240115-A3B9C)
+   */
+  const generateUserId = (): string => {
+    const date = new Date();
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+    const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
+    return `VLA-${dateStr}-${randomStr}`;
+  };
+
+  /**
+   * Submits the waitlist form to Google Apps Script
+   * The script saves data to Google Sheets and sends a confirmation email
+   * Note: Uses no-cors mode so we can't read the response status
+   * See docs/EMAIL_CONFIRMATION_SETUP.md for setup instructions
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Generate unique user ID for this submission
+    const userId = generateUserId();
+
+    try {
+      // Submit to Google Apps Script
+      // This endpoint saves to Google Sheets and sends confirmation email
+      await fetch("https://script.google.com/macros/s/AKfycbwLtWmvYhJOfFPQpCy4BoSRKVOYkEMZJLd5WYjgbrLMIQ9QsA690ZQN4X83I0YE-8eq/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          userId, // Include the unique user ID
+        }),
+      });
+
+      // Navigate to thank you page
+      navigate("/thank-you");
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      // Still navigate even if there's an error (since no-cors doesn't give us response status)
+      navigate("/thank-you");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /**
+   * Scrolls to top of page on mount
+   * Ensures users see the form header when navigating from other pages
+   */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  /**
+   * Creates a radial gradient effect that follows the mouse cursor on buttons
+   * Updates CSS custom properties (--mouse-x, --mouse-y) for the gradient position
+   */
+  const handleMouseMove = (e: MouseEvent<HTMLButtonElement>, index: number) => {
+    const button = buttonRefs.current[index];
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    button.style.setProperty("--mouse-x", `${x}px`);
+    button.style.setProperty("--mouse-y", `${y}px`);
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-foreground flex flex-col">
+      <style>
+        {`
+          @keyframes flip-up {
+            0% { opacity: 0; transform: translateY(14px) rotateX(10deg); transform-origin: top; }
+            60% { opacity: 1; transform: translateY(-2px) rotateX(0deg); }
+            100% { opacity: 1; transform: translateY(0) rotateX(0deg); }
+          }
+          .flip-up {
+            animation: flip-up 620ms cubic-bezier(0.23, 0.92, 0.35, 1) both;
+          }
+        `}
+      </style>
+      {/* Simple nav back to landing */}
+      <header className="flex items-center justify-between px-6 py-6 sticky top-0 bg-black/30 backdrop-blur-xl border-b border-white/10 z-50">
+        <div className="flex items-center gap-3">
+          <LogoMark />
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            ref={(el) => (buttonRefs.current[0] = el)}
+            onMouseMove={(e) => handleMouseMove(e, 0)}
+            className="group relative transition duration-500 ease-in-out hover:cursor-pointer rounded-2xl border border-white px-6 py-2 font-medium bg-transparent text-white min-w-[150px] hover:border-[#e4ea04] hover:text-black hover:bg-[#e4ea04] overflow-hidden before:absolute before:inset-0 before:rounded-2xl before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 before:bg-[radial-gradient(circle_80px_at_var(--mouse-x)_var(--mouse-y),rgba(228,234,4,0.15),transparent)]"
+            onClick={() => navigate("/")}
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              Back to landing
+            </span>
+          </Button>
+        </div>
+      </header>
+
+      {/* Form Section */}
+      <main className="flex-1 flex items-center justify-center px-6 py-12 pt-24 font-dm">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            {/* Logo */}
+            <div className="flex justify-center mb-8 py-4">
+              <div className="">
+                <AnimatedVLogo/>
+              </div>
+            </div>
+
+            <h1 className="font-zen text-3xl md:text-4xl font-bold mb-3 text-white">Join the Waitlist</h1>
+            <p className="font-dm text-white/80">
+              Be among the first to experience the future of music discovery.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2 flip-up" style={{ animationDelay: "60ms" }}>
+              <Label htmlFor="firstName" className="text-white font-medium">
+                First Name <span className="text-[#e4ea04]">*</span>
+              </Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                type="text"
+                required
+                value={formData.firstName}
+                onChange={handleInputChange}
+                placeholder="John"
+                className="w-full bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-[#e4ea04] focus:ring-[#e4ea04]"
+              />
+            </div>
+
+            <div className="space-y-2 flip-up" style={{ animationDelay: "120ms" }}>
+              <Label htmlFor="lastName" className="text-white font-medium">
+                Last Name <span className="text-[#e4ea04]">*</span>
+              </Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                type="text"
+                required
+                value={formData.lastName}
+                onChange={handleInputChange}
+                placeholder="Doe"
+                className="w-full bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-[#e4ea04] focus:ring-[#e4ea04]"
+              />
+            </div>
+
+            <div className="space-y-2 flip-up" style={{ animationDelay: "180ms" }}>
+              <Label htmlFor="email" className="text-white font-medium">
+                Email <span className="text-[#e4ea04]">*</span>
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="john@example.com"
+                className="w-full bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-[#e4ea04] focus:ring-[#e4ea04]"
+              />
+            </div>
+
+            <div className="space-y-2 flip-up" style={{ animationDelay: "240ms" }}>
+              <Label htmlFor="relation" className="text-white font-medium">
+                Relation to the Music Industry <span className="text-[#e4ea04]">*</span>
+              </Label>
+              <Input
+                id="relation"
+                name="relation"
+                type="text"
+                required
+                value={formData.relation}
+                onChange={handleInputChange}
+                placeholder="e.g., Music Supervisor, Curator, Producer"
+                className="w-full bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-[#e4ea04] focus:ring-[#e4ea04]"
+              />
+            </div>
+
+            <div className="space-y-2 flip-up" style={{ animationDelay: "300ms" }}>
+              <Label htmlFor="favoriteSong" className="text-white font-medium">
+                Favorite Song <span className="text-[#e4ea04]">*</span>
+              </Label>
+              <Textarea
+                id="favoriteSong"
+                name="favoriteSong"
+                required
+                value={formData.favoriteSong}
+                onChange={handleInputChange}
+                placeholder="Artist - Song Title"
+                className="w-full resize-none bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-[#e4ea04] focus:ring-[#e4ea04]"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2 flip-up" style={{ animationDelay: "330ms" }}>
+              <Label htmlFor="teamSize" className="text-white font-medium">
+                Team Size <span className="text-[#e4ea04]">*</span>
+              </Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { value: "1", label: "Just Me" },
+                  { value: "2-5", label: "2-5 people" },
+                  { value: "6-20", label: "6-20 people" },
+                  { value: "20+", label: "20+ people" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, teamSize: option.value }))}
+                    className={`px-4 py-3 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      formData.teamSize === option.value
+                        ? "bg-[#EE481F] text-white shadow-[0_0_15px_rgba(228,234,4,0.4)]"
+                        : "bg-white/5 text-white border border-white/20 hover:border-[#EE481F]/50 hover:bg-white/10"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-[#e4ea04] text-black hover:bg-[#e4ea04]/90 hover:shadow-[0_0_20px_rgba(228,234,4,0.4),0_0_40px_rgba(228,234,4,0.2)] py-6 text-lg font-medium transition duration-500 flip-up"
+              style={{ animationDelay: "390ms" }}
+            >
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
+          </form>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Waitlist;

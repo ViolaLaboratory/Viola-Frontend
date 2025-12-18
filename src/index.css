@@ -1,10 +1,27 @@
+/**
+ * Viola Frontend - Global Styles
+ *
+ * This file contains:
+ * 1. Tailwind CSS imports
+ * 2. CSS custom properties for the design system
+ * 3. Global animations (heatwave, fade-in-up)
+ * 4. Shared background styles (viola-glow-bg)
+ *
+ * Design System Notes:
+ * - All colors are defined in HSL format for consistency
+ * - Custom properties use CSS variables for dark mode support
+ * - Shared animations are prefixed with "animate-" for clarity
+ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/**
+ * Design System Color Tokens
+ * All colors MUST be in HSL format for proper dark mode support
+ * These variables are used throughout the app via Tailwind's theme extension
+ */
 
 @layer base {
   :root {
@@ -43,7 +60,7 @@ All colors MUST be HSL.
     --hover-row: 220 15% 12%;
     --badge-genre: 15 80% 70%;
     --badge-mood: 60 80% 75%;
-    --badge-licensing: 240 30% 75%;
+    --badge-licensing: 250 30% 75%;
 
     --sidebar-background: 0 0% 98%;
 
@@ -63,7 +80,7 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 220 15% 8%;
+    --background: 0 15% 8%;
     --foreground: 0 0% 95%;
 
     --card: 220 15% 10%;
@@ -109,4 +126,48 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/**
+ * Heatwave Animation
+ * Creates a slow, fluid background position shift for viola-glow-bg elements
+ * Used in: Landing Problem section, FAQ section, Thank You page
+ * Duration: 120s for subtle, ambient movement
+ */
+@keyframes heatwave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-heatwave {
+  animation: heatwave 120s infinite;
+  background-size: 400% 400%;
+}
+
+/**
+ * Shared Viola Glow Background
+ * Reusable background style that displays the viola.jpg image with effects
+ *
+ * Visual Effects:
+ * - Zoomed and blurred for ambient atmosphere
+ * - High saturation for vivid colors
+ * - Semi-transparent for layering
+ *
+ * Usage: Combine with animate-heatwave for animated background
+ * Example: className="viola-glow-bg animate-heatwave"
+ */
+.viola-glow-bg {
+  background-image: url('/viola.jpg');
+  background-size: 220% 220%;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: blur(22px) saturate(2);
+  opacity: 0.9;
 }

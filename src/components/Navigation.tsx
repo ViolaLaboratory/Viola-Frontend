@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface NavigationProps {
   currentView: 'search' | 'pitchBuilder' | 'catalogue';
@@ -29,22 +30,22 @@ const LogoMark = () => (
 
 const tabStyles = {
   search: {
-    border: "border-[#C0C0C0]",
+    border: "border-black",
     text: "text-[#F7F8FF]",
-    hover: "transition-all duration-500 ease-in-out hover:bg-[#C0C0C0]/20 hover:text-white",
-    active: "bg-[#C0C0C0]/10 text-foreground",
+    hover: "transition-all duration-500 ease-in-out hover:bg-[#C0C0C0]/20 hover:text-black hover:bg-white hover:shadow-white hover:border-white",
+    active: "bg-[#C0C0C0]/20 border-[#C0C0C0] text-foreground",
   },
   pitchBuilder: {
-    border: "border-[#C4D82E]",
-    text: "text-[#E5FFC2]",
+    border: "border-black",
+    text: "text-[#F7F8FF]",
     hover: "transition-all duration-500 ease-in-out hover:bg-[#F0FF5A] hover:text-[#1B1F05] hover:shadow-[0_0_18px_rgba(240,255,90,0.55)] hover:border-[#F0FF5A]",
-    active: "bg-[#C4D82E]/10 text-foreground",
+    active: "bg-[#C4D82E]/20 border-[#C4D82E] text-foreground",
   },
   catalogue: {
-    border: "border-[#FF5A5F]",
-    text: "text-[#FFC7CA]",
+    border: "border-black",
+    text: "text-[#F7F8FF]",
     hover: "transition-all duration-500 ease-in-out hover:bg-[#FF1F2A] hover:text-black hover:shadow-[0_0_18px_rgba(255,90,95,0.55)] hover:border-[#FF1F2A]",
-    active: "bg-[#FF5A5F]/10 text-foreground",
+    active: "bg-[#FF5A5F]/20 border-[#FF5A5F] text-foreground",
   },
 } satisfies Record<
   NavigationProps["currentView"],
@@ -52,9 +53,11 @@ const tabStyles = {
 >;
 
 export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
+  const navigate = useNavigate();
+
   return (
     <header className="border-b border-border bg-black backdrop-blur-md relative z-50">
-      <div className="flex items-center px-6 py-4">
+      <div className="flex items-center px-6 py-4 justify-between">
         <div className="flex items-center gap-6">
           <LogoMark />
           <nav className="flex items-center gap-3">
@@ -77,6 +80,25 @@ export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
               );
             })}
           </nav>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="rounded-2xl border border-white/20 px-6 py-2 font-medium transition-all duration-300 bg-transparent text-white hover:bg-white/10 hover:border-white/40"
+          >
+            Home
+          </Button>
+          <Button
+            onClick={() => navigate("/waitlist")}
+            className="rounded-2xl border border-[#e4ea04] px-6 py-2 font-medium transition-all duration-300 bg-[#e4ea04] text-black hover:bg-[#e4ea04]/90 hover:shadow-[0_0_20px_rgba(228,234,4,0.4)]"
+          >
+            Join Waitlist
+          </Button>
+          <img
+            src="michael.png"
+            alt="User Profile Photo"
+            className="w-12 h-12 rounded-full" />
         </div>
       </div>
     </header>

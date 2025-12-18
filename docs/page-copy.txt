@@ -1,0 +1,49 @@
+Landing page copy (Viola)
+
+Navigation/Hero:
+- Headline: "from brief to cleared track < 30 minutes."
+- Subhead: "Viola is an AI-powered file management tool to streamline work for the creative music tastemakers. Your taste, your timeline, and your sanity all intact."
+- CTA: "Request Early Access"
+
+Credibility/Testimonial:
+- Quote: "This sounds like an incredible tool... A reliable AI metadata tagging system would truly be a game changer for the industry — imagine being able to search every sync placement around the world in seconds. That's the future."
+- Attribution: Michael Chen · Coordinator, Creative Marketing — Film & TV @ Sony Music Publishing
+
+Problem:
+- Headline: "For tastemakers drowning in tracks, not short on taste."
+- Bullets: 40,000 tracks / one placement; "That perfect cue" is out there...; Spreadsheets, emails, prayers.
+- Closing: "You weren’t hired to tolerate busywork... viola gives you supplies you need to paint your vision."
+
+Callout (Locate · Listen · License):
+- Headline: "From “I'll Know It When I Hear It” to Cleared. One Place."
+- Subhead: "Built to flow straight into the three pillars below—find it, curate it, clear it."
+
+Feature pillars:
+- AI Search: "Find the perfect track in seconds" + description about natural-language briefs.
+- Pitch Builder: "Curate with confidence" + playlisting, saves, tracking what’s tried/killed.
+- Upload Catalog / Clearance: "Clear tracks faster than ever" + rights info and paper trail in one place.
+
+Outcomes:
+- Old way vs With Viola bullets; net effect: "more of your day goes to taste, not tabs."
+
+Who it’s for:
+- Headline: "Built for people whose job is taste."
+- Perfect if you are: Music supervisor, Sync / licensing director, Trailer or games music editor, Agency producer/editor.
+- You’re tired of: Clunky interfaces, chasing rights info, temp swap churn.
+- Closing: "Viola doesn’t replace your ear. It gives you a better easel, better paints, and a cleaner studio to work in."
+
+Why / Trust:
+- Headline: "AI that assists your ear, not replaces it."
+- Search bar tagline: "locate, listen, license."
+
+Quote CTA block:
+- Tag: "Trust The Ear"
+- Quote: "Viola feels like having an assistant who already knows your taste. It surfaces what you would have picked—without the 2 a.m. inbox spelunking."
+- Supporting line: "Early teams are closing briefs in under 30 minutes. Ready to join them?"
+- CTAs: Request Early Access (primary), Talk to Our Team (opens email).
+
+FAQ:
+- Questions: replacing supervisors? integrating catalogs? how technical? what’s in early access?
+
+Footer:
+- Standard footer with CTA: Request Early Access.

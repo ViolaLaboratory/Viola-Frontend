@@ -3,15 +3,23 @@ import { MusicCatalog } from "@/components/MusicCatalog";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { SearchInterface } from "@/components/SearchInterface";
 import { PitchBuilder } from "@/components/PitchBuilder";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<'search' | 'pitchBuilder' | 'catalogue'>('search');
 
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24">
-      <Navigation currentView={currentView} onViewChange={setCurrentView} />
-      <main className="pt-6">
+    <div className="min-h-screen bg-background text-foreground pb-0">
+      <header className="sticky top-0 z-20">
+        <Navigation currentView={currentView} onViewChange={setCurrentView} />
+      </header>
+      
+      <main className="pt-0">
         {currentView === 'search' && <SearchInterface />}
         {currentView === 'pitchBuilder' && <PitchBuilder />}
         {currentView === 'catalogue' && <MusicCatalog />}
