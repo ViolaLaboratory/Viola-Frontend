@@ -177,7 +177,7 @@ Best,`,
       <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(228,234,4,0.12),transparent_45%)]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(238,72,31,0.12),transparent_45%)]"></div>
-        <div className="absolute inset-0 opacity-10 mix-blend-screen viola-glow-bg scale-[1.05] animate-heatwave"></div>
+        <div className="absolute inset-0 opacity-10 mix-blend-screen viola-glow-bg scale-[1.05] animate-heatwave heatwave-allow-mobile"></div>
       </div>
       {/* Header with Logo */}
       <header className="flex items-center justify-between px-6 py-6 sticky top-0 backdrop-blur-xl border-b border-white/10 z-20 bg-transparent">
@@ -252,7 +252,7 @@ Best,`,
               <label className="text-sm text-white mb-3 block">
                 Share with your network
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Button
                   onClick={() => handleSocialShare("twitter")}
                   variant="outline"

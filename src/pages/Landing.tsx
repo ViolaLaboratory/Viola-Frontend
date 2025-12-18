@@ -238,6 +238,7 @@ const Landing = () => {
               ref={(el) => (buttonRefs.current[0] = el)}
               onMouseMove={(e) => handleMouseMove(e, 0)}
               onClick={handleJoinWaitlist}
+              style={{ boxShadow: 'none' }}
               className="
               hidden
               lg:inline-flex lg:items-center
@@ -265,11 +266,13 @@ const Landing = () => {
           muted
           loop
           playsInline
-          preload="auto"
-          className="absolute lg:rounded-full invert top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 blur-[25px] sm:w-full lg:w-3/4 h-1/2 h-auto object-cover z-0 opacity-90"
+          preload="metadata"
+          className="absolute lg:rounded-full invert top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 blur-[22px] sm:w-full lg:w-3/4 h-1/2 h-auto object-cover z-0 opacity-90 hidden sm:block"
         >
           <source src="/viola_background.mp4" type="video/mp4" />
         </video>
+        {/* Lightweight static fallback for mobile */}
+        <div className="absolute inset-0 sm:hidden viola-glow-bg opacity-70 blur-2xl scale-125"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black via-black/30 to-black/80 z-[1]"></div>
 
         <div className="
@@ -302,7 +305,7 @@ const Landing = () => {
       </section>
 
       {/* Credibility Section */}
-      <section className="px-4 md:px-8 lg:px-12 py-12 md:py-10 lg:py-10 pt-0">
+      <section className="px-4 md:px-8 lg:px-12 py-12 md:py-10 lg:py-10 pt-12 lg:pt-0">
         <div className="max-w-9xl mx-auto">
 
           <div className="relative overflow-hidden rounded-2xl px-6 md:px-10 py-10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] pt-0">
@@ -346,7 +349,7 @@ const Landing = () => {
                 </div>
                 <div className="w-full md:w-1/2 flex flex-col justify-evenly gap-6">
                   <p className="relative font-zen text-xl md:text-2xl lg:text-3xl leading-relaxed text-white">
-                  A reliable AI metadata tagging system would be a game changer for sync. Imagine searching every placement worldwide in seconds. That’s the future.
+                  "A reliable AI metadata tagging system would be a game changer for sync. Imagine searching every placement worldwide in seconds. That’s the future."
                   </p>
 
                   <div className="relative flex items-center gap-3 text-sm md:text-base text-white/70">
@@ -472,7 +475,7 @@ const Landing = () => {
                   muted
                   loop
                   playsInline
-                  preload="auto"
+                  preload="metadata"
                   className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
                 >
                   <source src="/violaSearch.mp4" type="video/mp4" />
@@ -507,7 +510,7 @@ const Landing = () => {
                   muted
                   loop
                   playsInline
-                  preload="auto"
+                  preload="metadata"
                   className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
                 >
                   <source src="/violaPitchBuilder.mp4" type="video/mp4" />
@@ -544,7 +547,7 @@ const Landing = () => {
                     muted
                     loop
                     playsInline
-                    preload="auto"
+                    preload="metadata"
                     className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
                   >
                   <source src="/violaCatalogue.mp4" type="video/mp4" />
