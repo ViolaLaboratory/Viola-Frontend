@@ -166,6 +166,14 @@ const Landing = () => {
   };
 
   /**
+   * Scrolls to top of page on mount
+   * Ensures users see the hero section when navigating to landing page
+   */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  /**
    * Intersection Observer effect for "With Viola" card animation
    * Triggers the flicker-on animation when card becomes 30% visible
    */
@@ -235,11 +243,12 @@ const Landing = () => {
               lg:inline-flex lg:items-center
               group relative transition duration-500
               ease-in-out hover:cursor-pointer rounded-lg border
-              border-white px-6 py-2 font-medium bg-transparent min-w-[150px]
-              hover:border-[#e4ea04] hover:text-black hover:bg-[#e4ea04] overflow-hidden
-              before:absolute before:inset-0 before:rounded-lg before:opacity-0
-              hover:before:opacity-100 before:transition-opacity before:duration-300
-              before:bg-[radial-gradient(circle_80px_at_var(--mouse-x)_var(--mouse-y),rgba(228,234,4,0.15),transparent)]"
+              border-white px-6 py-2 font-medium bg-transparent text-white min-w-[150px]
+              hover:border-[#e4ea04] hover:text-black hover:bg-[#e4ea04]
+              shadow-none hover:shadow-none hover:shadow-transparent drop-shadow-none hover:drop-shadow-none
+              focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0
+              overflow-hidden
+              "
             >
               <span className="relative z-10">Request Early Access</span>
               <ArrowRight className="w-4 h-4 ml-2 relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
@@ -382,17 +391,17 @@ const Landing = () => {
                   </p>
 
                   <ul className="list-disc pl-5 md:pl-6 space-y-1 md:space-y-2 lg:space-y-5">
-                    <li className="text-sm md:text-base lg:text-lg">40,000+ tracks for every one placement.</li>
+                    <li className="text-sm md:text-base lg:text-lg">3–4 hours of manual searching for every placement</li>
                     <li className="text-sm md:text-base lg:text-lg">
-                      That perfect cue is buried in ten tabs and three drives.
+                    Endless scrolling and half-listening to find “the one”
                     </li>
                     <li className="text-sm md:text-base lg:text-lg">
-                      Spreadsheets, emails, and a little prayer for every license.
+                    Messy email chains and spreadsheets for every license
                     </li>
                   </ul>
 
                   <p className="text-sm md:text-base pt-2 md:pt-3">
-                  You weren’t hired to tolerate busywork. Viola gives you the easel, paints, and clean studio so you can just paint.
+                  You weren’t hired to tolerate busywork. 
                   </p>
 
                   
@@ -439,10 +448,12 @@ const Landing = () => {
             <h2 className="font-zen font-semibold text-3xl md:text-4xl lg:text-5xl leading-tight max-w-5xl mx-auto">
               From <span className="italic">“I'll Know It When I Hear It”</span>
               <br className="hidden md:block" />
-              <span className="md:inline block mt-2 md:mt-0 font-dm">to Cleared. One Place.</span>
+              <span className="md:inline block mt-2 md:mt-0 font-dm">to Pitched. One Place.</span>
             </h2>
             <p className="text-sm md:text-base max-w-3xl mx-auto">
-              Built to flow straight into the three pillars below—find it, curate it, clear it.
+            Viola auto-tags your catalog and lets you search it the way you talk. Drag your songs in once, and our AI adds rich metadata in the background. Then type briefs in natural language and the catalog reorders itself from best fit to worst fit.
+
+            One workspace to locate, listen, and license.
             </p>
           </div>
         </div>
@@ -477,8 +488,8 @@ const Landing = () => {
                 Find the perfect track in seconds
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
-              Type what you’d say in the spotting session: “dark and eerie song while the lead girl and boy are being chased, subtle vocal, no explicit lyrics.” Viola understands mood, genre, era, references, and story context.
-              No more blind keyword guessing or endless scroll. Just say what you need, and Viola pulls the tracks that actually feel right.            </p>
+              Type what you’d say in the spotting session: “dark and eerie song while the lead girl and boy are chased in the woods, subtle vocal, 130 bpm, no explicit lyrics.” 
+              Viola understands mood, genre, tempo, lyrics, and story context. No more blind keyword guessing or endless scroll. Just say what you need, and Viola pulls the tracks that actually feel right.            </p>
             </div>
           </div>
         </section>
@@ -505,14 +516,15 @@ const Landing = () => {
             <div className="w-full lg:flex-1">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#e4ea04]/10 text-[#e4ea04] mb-6 ring-1 ring-[#e4ea04]">
                 <Drill className="w-4 h-4" />
-                <span className="text-sm font-medium">Pitch Builder</span>
+                <span className="text-sm font-medium">Pitch Kit Builder</span>
               </div>
               <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
                 Curate with confidence
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
-                Build playlists by show, episode, or game level. Save favorites, versions, and alternates without losing the thread. Viola tracks what you’ve tried, what’s in contention, and what’s been killed so you don’t have to.
-                Smart curation tools surface patterns in your taste, so each pass gets sharper instead of starting from zero.
+              Build ready-to-send pitch kits in a few clicks. Viola pulls in metadata, art, and 
+              links for every track automatically, 
+              so your decks and folders are clean, consistent, and synced to the catalog.
               </p>
             </div>
           </div>
@@ -540,14 +552,14 @@ const Landing = () => {
             <div className="w-full lg:flex-1">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#e4ea04]/10 text-[#e4ea04] mb-6 ring-1 ring-[#e4ea04]">
                 <CloudUpload className="w-4 h-4" />
-                <span className="text-sm font-medium">Upload Your Entire Catalog</span>
+                <span className="text-sm font-medium">Catalog Viewer</span>
               </div>
               <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
                 Clear tracks faster than ever
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
-                Your entire catalog in one place. When a track hits, everything you need to clear it is already there: usage, rights info, and context in one place. Request terms, track status, and keep the paper trail tied to the project instead of buried in email.
-                From first listen to licensed cue, Viola keeps you in one workspace.
+              Store your entire catalog in one place. See metadata, context, and licensing status at a glance. 
+              Because Catalog, Search, and Pitch Kits live together, every song is one click away from being pitched or cleared.
               </p>
               
             </div>
@@ -732,7 +744,7 @@ const Landing = () => {
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
                   placeholder={placeholderText}
-                  className={`h-14 text-base border border-black/10 bg-white text-black placeholder:text-black/60 focus-visible:ring-2 focus-visible:ring-black rounded-full shadow-lg hover:border-black/30 shadow-black/20 transition-all duration-300 ${
+                  className={`h-14 text-base border border-black/10 border-1 bg-white text-black placeholder:text-black/60 focus-visible:ring-1 focus-visible:ring-black rounded-full shadow-lg hover:border-black/30 shadow-black/20 transition-all duration-300 ${
                     isSearchFocused ? 'pl-16 pr-14' : 'pl-6 pr-6'
                   }`}
                 />
@@ -781,6 +793,13 @@ const Landing = () => {
                     Request Early Access
                     <ArrowRight className="w-4 h-4" />
                   </span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hidden lg:flex text-white border-white/40 px-16 py-6 sm:min-w-[220px] text-lg rounded-lg transition-all duration-500 ease-out hover:border-[#e4ea04] hover:text-black hover:bg-[#e4ea04]/85 hover:shadow-[0_0_30px_rgba(228,234,4,0.35)]"
+                  onClick={() => navigate("/demo")}
+                >
+                  Checkout Demo
                 </Button>
                 <Button
                   variant="outline"

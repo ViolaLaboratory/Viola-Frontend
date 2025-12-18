@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface NavigationProps {
   currentView: 'search' | 'pitchBuilder' | 'catalogue';
@@ -52,6 +53,8 @@ const tabStyles = {
 >;
 
 export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
+  const navigate = useNavigate();
+
   return (
     <header className="border-b border-border bg-black backdrop-blur-md relative z-50">
       <div className="flex items-center px-6 py-4 justify-between">
@@ -78,8 +81,21 @@ export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
             })}
           </nav>
         </div>
-        <div className="">
-            <img
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="rounded-2xl border border-white/20 px-6 py-2 font-medium transition-all duration-300 bg-transparent text-white hover:bg-white/10 hover:border-white/40"
+          >
+            Home
+          </Button>
+          <Button
+            onClick={() => navigate("/waitlist")}
+            className="rounded-2xl border border-[#e4ea04] px-6 py-2 font-medium transition-all duration-300 bg-[#e4ea04] text-black hover:bg-[#e4ea04]/90 hover:shadow-[0_0_20px_rgba(228,234,4,0.4)]"
+          >
+            Join Waitlist
+          </Button>
+          <img
             src="michael.png"
             alt="User Profile Photo"
             className="w-12 h-12 rounded-full" />

@@ -192,7 +192,7 @@ Best,`,
             onClick={() => navigate("/")}
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
-              Back to landing
+              Back to home
             </span>
           </Button>
         </div>

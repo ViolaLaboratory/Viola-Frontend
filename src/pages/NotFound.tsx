@@ -16,6 +16,14 @@ const NotFound = () => {
   const location = useLocation();
 
   /**
+   * Scrolls to top of page on mount
+   * Ensures users see the 404 message when page loads
+   */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  /**
    * Logs 404 errors to console for debugging purposes
    * Tracks which routes users are attempting to access
    */
