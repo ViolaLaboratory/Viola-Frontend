@@ -80,6 +80,9 @@ const Landing = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [placeholderText, setPlaceholderText] = useState("Find ");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchVideoFailed, setSearchVideoFailed] = useState(false);
+  const [pitchVideoFailed, setPitchVideoFailed] = useState(false);
+  const [catalogueVideoFailed, setCatalogueVideoFailed] = useState(false);
 
   /**
    * Creates radial gradient effect that follows mouse cursor on CTA buttons
@@ -267,9 +270,11 @@ const Landing = () => {
           loop
           playsInline
           preload="metadata"
+          poster="/viola.jpg"
+          crossOrigin="anonymous"
           className="absolute lg:rounded-full invert top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 blur-[22px] sm:w-full lg:w-3/4 h-1/2 h-auto object-cover z-0 opacity-90 hidden sm:block"
         >
-          <source src="/public/viola_background.mp4" type="video/mp4" />
+          <source src="/viola_background.mp4" type="video/mp4" />
         </video>
         {/* Lightweight static fallback for mobile */}
         <div className="absolute inset-0 sm:hidden viola-glow-bg opacity-70 blur-2xl scale-125"></div>
@@ -470,16 +475,27 @@ const Landing = () => {
             {/* Animation - Left */}
             <div className="w-full lg:flex-1 flex justify-center">
               <div className="relative w-full max-w-3xl overflow-hidden rounded-xl aspect-video animate-fade-in-up border border-white/10 bg-black/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-                <video
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
-                >
-                  <source src="/public/violaSearch.mp4" type="video/mp4" />
-                </video>
+                {searchVideoFailed ? (
+                  <img
+                    src="/viola.jpg"
+                    alt="Search demo placeholder"
+                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1 brightness-75"
+                  />
+                ) : (
+                  <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    poster="/viola.jpg"
+                    crossOrigin="anonymous"
+                    onError={() => setSearchVideoFailed(true)}
+                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
+                  >
+                    <source src="/violaSearch.mp4" type="video/mp4" />
+                  </video>
+                )}
               </div>
             </div>
 
@@ -505,16 +521,27 @@ const Landing = () => {
             {/* Animation - Right */}
             <div className="w-full lg:flex-1 flex justify-center">
               <div className="relative w-full max-w-3xl overflow-hidden rounded-xl aspect-video animate-fade-in-up border border-white/10 bg-black/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-                <video
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
-                >
-                  <source src="/public/violaPitchBuilder.mp4" type="video/mp4" />
-                </video>
+                {pitchVideoFailed ? (
+                  <img
+                    src="/viola.jpg"
+                    alt="Pitch builder placeholder"
+                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1 brightness-75"
+                  />
+                ) : (
+                  <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    poster="/viola.jpg"
+                    crossOrigin="anonymous"
+                    onError={() => setPitchVideoFailed(true)}
+                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
+                  >
+                    <source src="/violaPitchBuilder.mp4" type="video/mp4" />
+                  </video>
+                )}
               </div>
             </div>
 
@@ -542,29 +569,27 @@ const Landing = () => {
             {/* Animation - Left */}
             <div className="w-full lg:flex-1 flex justify-center">
               <div className="relative w-full max-w-3xl overflow-hidden rounded-xl aspect-video animate-fade-in-up border border-white/10 bg-black/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-                {/* <video
+                {catalogueVideoFailed ? (
+                  <img
+                    src="/viola.jpg"
+                    alt="Catalog viewer placeholder"
+                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1 brightness-75"
+                  />
+                ) : (
+                  <video
                     autoPlay
                     muted
                     loop
                     playsInline
                     preload="metadata"
+                    poster="/viola.jpg"
+                    crossOrigin="anonymous"
+                    onError={() => setCatalogueVideoFailed(true)}
                     className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
-                  > */}
-                    <video
-                      src="/violaCatalogue.mp4"
-                      controls
-                      muted
-                      playsInline
-                      style={{
-                        width: "400px",
-                        height: "250px",
-                        background: "red",
-                        position: "relative",
-                        zIndex: 9999,
-                      }}
-                    />
-                                      {/* <source src="/public/violaCatalogue.mp4" type="video/mp4" /> */}
-                {/* </video> */}
+                  >
+                    <source src="/violaCatalogue.mp4" type="video/mp4" />
+                  </video>
+                )}
               </div>
             </div>
 
@@ -837,10 +862,10 @@ const Landing = () => {
 
       {/* FAQ */}
       <section className="px-6 py-16 md:py-20">
-        <div className="max-w-5xl mx-auto relative overflow-hidden rounded-3xl border border-white/10 bg-black/70 backdrop-blur-xl p-6 md:p-10 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+        <div className="max-w-5xl mx-auto relative overflow-hidden rounded-3xl border border-white/10 bg-black/60 md:bg-black/70 backdrop-blur-sm md:backdrop-blur-xl p-6 md:p-10 shadow-[0_24px_60px_rgba(0,0,0,0.28)]">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-[-20%] bg-[radial-gradient(circle_at_85%_40%,rgba(238,72,31,0.12),transparent_45%)]"></div>
-            <div className="absolute inset-0 opacity-25 mix-blend-screen viola-glow-bg animate-heatwave"></div>
+            <div className="absolute inset-0 opacity-25 mix-blend-screen viola-glow-bg sm:animate-heatwave"></div>
           </div>
 
           <div className="relative space-y-6">
@@ -872,17 +897,17 @@ const Landing = () => {
                 <AccordionItem
                   key={item.q}
                   value={`item-${idx}`}
-                  className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm transition-colors duration-500 data-[state=open]:bg-[#e4ea04] data-[state=open]:border-[#e4ea04]"
+                  className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm transition-colors duration-200 data-[state=open]:bg-[#e4ea04] data-[state=open]:border-[#e4ea04]"
                 >
-                  <AccordionTrigger className="px-4 py-3 text-left text-white font-semibold hover:no-underline group transition-colors duration-500 data-[state=open]:text-black">
+                  <AccordionTrigger className="px-4 py-3 text-left text-white font-semibold hover:no-underline group transition-colors duration-200 data-[state=open]:text-black">
                     <span className="flex items-center gap-3">
-                      <span className="inline-flex h-6 w-6 p-4 items-center justify-center rounded-full bg-white/15 text-white text-xs transition-colors duration-500 group-hover:bg-white group-hover:text-black group-data-[state=open]:bg-black/10 group-data-[state=open]:text-black">
+                      <span className="inline-flex h-6 w-6 p-4 items-center justify-center rounded-full bg-white/15 text-white text-xs transition-colors duration-200 group-hover:bg-white group-hover:text-black group-data-[state=open]:bg-black/10 group-data-[state=open]:text-black">
                         {idx + 1}
                       </span>
                       {item.q}
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4 text-black leading-relaxed transition-all duration-500 data-[state=open]:text-black">
+                  <AccordionContent className="px-4 pb-4 text-black leading-relaxed transition-all duration-200 data-[state=open]:text-black">
                     {item.a}
                   </AccordionContent>
                 </AccordionItem>
