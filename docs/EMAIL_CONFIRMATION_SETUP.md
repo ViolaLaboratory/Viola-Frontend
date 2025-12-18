@@ -2,8 +2,6 @@
 
 This guide will help you set up automated email confirmations for the Viola waitlist form.
 
-## Option 1: Google Apps Script (Recommended - Free & Easy)
-
 ### Step 1: Create or Update Your Google Apps Script
 
 1. Go to [Google Apps Script](https://script.google.com)
