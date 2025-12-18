@@ -5,6 +5,10 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight, Target, Bug, X, Cog, CloudUpload, Drill, BrainCircuit, Star, Users, CheckCircle2, ChevronDown, Check } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Footer from "@/components/Footer";
+import heroVideo from "@/assets/viola_background.mp4";
+import searchVideo from "@/assets/violaSearch.mp4";
+import pitchVideo from "@/assets/violaPitchBuilder.mp4";
+import catalogueVideo from "@/assets/violaCatalogue.mp4";
 
 /**
  * Phrases that cycle through in the search bar placeholder
@@ -274,7 +278,7 @@ const Landing = () => {
           crossOrigin="anonymous"
           className="absolute lg:rounded-full invert top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 blur-[22px] sm:w-full lg:w-3/4 h-1/2 h-auto object-cover z-0 opacity-90 hidden sm:block"
         >
-          <source src="/viola_background.mp4" type="video/mp4" />
+          <source src={heroVideo} type="video/mp4" />
         </video>
         {/* Lightweight static fallback for mobile */}
         <div className="absolute inset-0 sm:hidden viola-glow-bg opacity-70 blur-2xl scale-125"></div>
@@ -493,7 +497,7 @@ const Landing = () => {
                     onError={() => setSearchVideoFailed(true)}
                     className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
                   >
-                    <source src="/violaSearch.mp4" type="video/mp4" />
+                    <source src={searchVideo} type="video/mp4" />
                   </video>
                 )}
               </div>
@@ -539,7 +543,7 @@ const Landing = () => {
                     onError={() => setPitchVideoFailed(true)}
                     className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
                   >
-                    <source src="/violaPitchBuilder.mp4" type="video/mp4" />
+                    <source src={pitchVideo} type="video/mp4" />
                   </video>
                 )}
               </div>
@@ -587,7 +591,7 @@ const Landing = () => {
                     onError={() => setCatalogueVideoFailed(true)}
                     className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
                   >
-                    <source src="/violaCatalogue.mp4" type="video/mp4" />
+                    <source src={catalogueVideo} type="video/mp4" />
                   </video>
                 )}
               </div>
