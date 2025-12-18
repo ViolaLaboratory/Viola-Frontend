@@ -151,6 +151,32 @@
   background-size: 400% 400%;
 }
 
+/* Mobile and reduced-motion safeguards */
+@media (max-width: 640px) {
+  .animate-heatwave {
+    animation: none;
+    background-size: 220% 220%;
+    background-position: center;
+  }
+
+  .viola-glow-bg {
+    background-size: 160% 160%;
+    filter: blur(18px) saturate(1.6);
+  }
+
+  /* Opt-in: keep heatwave on specific elements (e.g., Thank You page) */
+  .heatwave-allow-mobile.animate-heatwave {
+    animation: heatwave 120s infinite;
+    background-size: 260% 260%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-heatwave {
+    animation: none;
+  }
+}
+
 /**
  * Shared Viola Glow Background
  * Reusable background style that displays the viola.jpg image with effects
