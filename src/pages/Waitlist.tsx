@@ -61,6 +61,7 @@ const Waitlist = () => {
     relation: "",
     favoriteSong: "",
     teamSize: "1", // Default to individual
+    companyFake: "",
   });
 
   /**
@@ -103,7 +104,6 @@ const Waitlist = () => {
       // This endpoint saves to Google Sheets and sends confirmation email
       await fetch("https://script.google.com/macros/s/AKfycbwLtWmvYhJOfFPQpCy4BoSRKVOYkEMZJLd5WYjgbrLMIQ9QsA690ZQN4X83I0YE-8eq/exec", {
         method: "POST",
-        mode: "no-cors",
         headers: {
           "Content-Type": "application/json",
         },
@@ -199,6 +199,16 @@ const Waitlist = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Honeypot (hidden). Bots often fill this. Humans won't. */}
+            <input
+              type="text"
+              name="company"
+              value={(formData as any).company ?? ""}
+              onChange={handleInputChange}
+              className="hidden"
+              tabIndex={-1}
+              autoComplete="off"
+            />
             <div className="space-y-2 flip-up" style={{ animationDelay: "60ms" }}>
               <Label htmlFor="firstName" className="text-white font-medium">
                 First Name <span className="text-[#e4ea04]">*</span>
