@@ -262,9 +262,10 @@ const Landing = () => {
         {/* Video Background */}
         <video
           autoPlay
-          loop
           muted
+          loop
           playsInline
+          preload="auto"
           className="absolute lg:rounded-full invert top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 blur-[25px] sm:w-full lg:w-3/4 h-1/2 h-auto object-cover z-0 opacity-90"
         >
           <source src="/viola_background.mp4" type="video/mp4" />
@@ -468,12 +469,13 @@ const Landing = () => {
               <div className="relative w-full max-w-3xl overflow-hidden rounded-xl aspect-video animate-fade-in-up border border-white/10 bg-black/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                 <video
                   autoPlay
-                  loop
                   muted
+                  loop
                   playsInline
+                  preload="auto"
                   className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
                 >
-                  <source src="/violaSearch.mov" type="video/mp4" />
+                  <source src="/violaSearch.mp4" type="video/mp4" />
                 </video>
               </div>
             </div>
@@ -502,12 +504,13 @@ const Landing = () => {
               <div className="relative w-full max-w-3xl overflow-hidden rounded-xl aspect-video animate-fade-in-up border border-white/10 bg-black/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                 <video
                   autoPlay
-                  loop
                   muted
+                  loop
                   playsInline
+                  preload="auto"
                   className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
                 >
-                  <source src="/violaPitchBuilder.mov" type="video/mp4" />
+                  <source src="/violaPitchBuilder.mp4" type="video/mp4" />
                 </video>
               </div>
             </div>
@@ -538,12 +541,13 @@ const Landing = () => {
               <div className="relative w-full max-w-3xl overflow-hidden rounded-xl aspect-video animate-fade-in-up border border-white/10 bg-black/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                 <video
                     autoPlay
-                    loop
                     muted
+                    loop
                     playsInline
+                    preload="auto"
                     className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
                   >
-                  <source src="/violaCatalogue.mov" type="video/mp4" />
+                  <source src="/violaCatalogue.mp4" type="video/mp4" />
                 </video>
               </div>
             </div>
