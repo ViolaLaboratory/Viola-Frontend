@@ -542,16 +542,29 @@ const Landing = () => {
             {/* Animation - Left */}
             <div className="w-full lg:flex-1 flex justify-center">
               <div className="relative w-full max-w-3xl overflow-hidden rounded-xl aspect-video animate-fade-in-up border border-white/10 bg-black/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-                <video
+                {/* <video
                     autoPlay
                     muted
                     loop
                     playsInline
                     preload="metadata"
                     className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
-                  >
-                  <source src="/public/violaCatalogue.mp4" type="video/mp4" />
-                </video>
+                  > */}
+                    <video
+                      src="/violaCatalogue.mp4"
+                      controls
+                      muted
+                      playsInline
+                      style={{
+                        width: "400px",
+                        height: "250px",
+                        background: "red",
+                        position: "relative",
+                        zIndex: 9999,
+                      }}
+                    />
+                                      {/* <source src="/public/violaCatalogue.mp4" type="video/mp4" /> */}
+                {/* </video> */}
               </div>
             </div>
 
