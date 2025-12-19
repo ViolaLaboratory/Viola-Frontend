@@ -29,7 +29,7 @@ const Index = () => {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-12 text-center space-y-6">
-        <div className="space-y-3 place-items-center">
+        <div className="flex flex-col space-y-3 items-center gap-3">
           <AnimatedVLogo/>
           <p className="text-sm uppercase tracking-[0.2em] text-white pt-10">Demo unavailable on mobile</p>
           <h1 className="text-3xl font-semibold font-zen">Please view the demo on desktop</h1>
