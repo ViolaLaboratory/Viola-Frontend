@@ -288,7 +288,10 @@ const Landing = () => {
         )}
         {/* Lightweight static fallback for mobile */}
         <div className="absolute saturate-[0] inset-0 sm:hidden viola-glow-bg opacity-70 blur-2xl scale-125"></div>
-        <div className="absolute saturate-[0] inset-0 bg-gradient-to-b from-black via-black/30 to-black/80 z-[1]"></div>
+        {/* Mobile header fade from transparent (top) to black (bottom) */}
+        <div className="absolute inset-0 sm:hidden bg-gradient-to-b from-transparent via-black/45 to-black z-[1]"></div>
+        {/* Desktop/tablet gradient */}
+        <div className="absolute saturate-[0] inset-0 bg-gradient-to-b from-black via-black/30 to-black/80 z-[1] hidden sm:block"></div>
 
         <div className="
       absolute saturate-[0] pointer-events-none -inset-[90%] z-10
