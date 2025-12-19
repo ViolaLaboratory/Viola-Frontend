@@ -465,7 +465,6 @@ const Landing = () => {
 
           {/* Content */}
           <div className="relative z-10 px-6 md:px-12 py-12 md:py-16 lg:py-20 text-center space-y-3 md:space-y-4">
-            <img src="flower.png" className="absolute place-self-center w-full h-fit invert z-0 opacity-5 blur-xs"/>
             <p className="uppercase tracking-[0.25em] text-xs">Locate · Listen · License</p>
             <h2 className="font-zen font-semibold text-3xl md:text-4xl lg:text-5xl leading-tight max-w-5xl mx-auto">
               From <span className="italic">“I'll Know It When I Hear It”</span>
