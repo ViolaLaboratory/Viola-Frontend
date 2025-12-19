@@ -104,6 +104,7 @@ const Waitlist = () => {
       // This endpoint saves to Google Sheets and sends confirmation email
       await fetch("https://script.google.com/macros/s/AKfycbwLtWmvYhJOfFPQpCy4BoSRKVOYkEMZJLd5WYjgbrLMIQ9QsA690ZQN4X83I0YE-8eq/exec", {
         method: "POST",
+        mode: "no-cors",
         headers: {
           "Content-Type": "application/json",
         },

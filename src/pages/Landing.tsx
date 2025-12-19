@@ -5,10 +5,6 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight, Target, Bug, X, Cog, CloudUpload, Drill, BrainCircuit, Star, Users, CheckCircle2, ChevronDown, Check } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Footer from "@/components/Footer";
-import heroVideo from "@/assets/viola_background.mp4";
-import searchVideo from "@/assets/violaSearch.mp4";
-import pitchVideo from "@/assets/violaPitchBuilder.mp4";
-import catalogueVideo from "@/assets/violaCatalogue.mp4";
 
 /**
  * Phrases that cycle through in the search bar placeholder
@@ -20,6 +16,13 @@ const typingPhrases = [
   "a spicy melody...",
   "cinematic builds..."
 ];
+
+// Serve videos directly from the public folder to avoid bundling issues on deploy
+const heroVideo = `${import.meta.env.BASE_URL}viola_background.mp4`;
+const searchVideo = `${import.meta.env.BASE_URL}violaSearch.mp4`;
+const pitchVideo = `${import.meta.env.BASE_URL}violaPitchBuilder.mp4`;
+const catalogueVideo = `${import.meta.env.BASE_URL}violaCatalogue.mp4`;
+const fallbackPoster = `${import.meta.env.BASE_URL}viola.jpg`;
 
 /**
  * LogoMark Component
@@ -84,6 +87,7 @@ const Landing = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [placeholderText, setPlaceholderText] = useState("Find ");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [heroVideoFailed, setHeroVideoFailed] = useState(false);
   const [searchVideoFailed, setSearchVideoFailed] = useState(false);
   const [pitchVideoFailed, setPitchVideoFailed] = useState(false);
   const [catalogueVideoFailed, setCatalogueVideoFailed] = useState(false);
@@ -268,24 +272,26 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="relative z-10 min-h-screen flex flex-col items-center content-center justify-center px-2 lg:px-8 pt-20 md:pt-32 overflow-hidden">
         {/* Video Background */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          poster="/viola.jpg"
-          crossOrigin="anonymous"
-          className="absolute lg:rounded-full invert top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 blur-[22px] sm:w-full lg:w-3/4 h-1/2 h-auto object-cover z-0 opacity-90 hidden sm:block"
-        >
-          <source src={heroVideo} type="video/mp4" />
-        </video>
+        {heroVideoFailed ? null : (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            crossOrigin="anonymous"
+            onError={() => setHeroVideoFailed(true)}
+            className="absolute lg:rounded-full invert top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 blur-[22px] sm:w-full lg:w-3/4 h-1/2 h-auto object-cover z-0 opacity-90 hidden sm:block"
+          >
+            <source src={heroVideo} type="video/mp4" />
+          </video>
+        )}
         {/* Lightweight static fallback for mobile */}
-        <div className="absolute inset-0 sm:hidden viola-glow-bg opacity-70 blur-2xl scale-125"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/30 to-black/80 z-[1]"></div>
+        <div className="absolute saturate-[0] inset-0 sm:hidden viola-glow-bg opacity-70 blur-2xl scale-125"></div>
+        <div className="absolute saturate-[0] inset-0 bg-gradient-to-b from-black via-black/30 to-black/80 z-[1]"></div>
 
         <div className="
-      absolute pointer-events-none -inset-[90%] z-10
+      absolute saturate-[0] pointer-events-none -inset-[90%] z-10
       bg-[linear-gradient(90deg,rgba(255,255,255,0.1)_0%,rgba(0,0,0,1)_50%,rgba(255,255,255,0.1)_100%)]
        blur-[40px] opacity-40"></div>
 
@@ -481,9 +487,9 @@ const Landing = () => {
               <div className="relative w-full max-w-3xl overflow-hidden rounded-xl aspect-video animate-fade-in-up border border-white/10 bg-black/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                 {searchVideoFailed ? (
                   <img
-                    src="/viola.jpg"
+                    src={fallbackPoster}
                     alt="Search demo placeholder"
-                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1 brightness-75"
+                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1 brightness-75 grayscale"
                   />
                 ) : (
                   <video
@@ -492,7 +498,7 @@ const Landing = () => {
                     loop
                     playsInline
                     preload="metadata"
-                    poster="/viola.jpg"
+                    poster={fallbackPoster}
                     crossOrigin="anonymous"
                     onError={() => setSearchVideoFailed(true)}
                     className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
@@ -527,9 +533,9 @@ const Landing = () => {
               <div className="relative w-full max-w-3xl overflow-hidden rounded-xl aspect-video animate-fade-in-up border border-white/10 bg-black/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                 {pitchVideoFailed ? (
                   <img
-                    src="/viola.jpg"
+                    src={fallbackPoster}
                     alt="Pitch builder placeholder"
-                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1 brightness-75"
+                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1 brightness-75 grayscale"
                   />
                 ) : (
                   <video
@@ -538,7 +544,7 @@ const Landing = () => {
                     loop
                     playsInline
                     preload="metadata"
-                    poster="/viola.jpg"
+                    poster={fallbackPoster}
                     crossOrigin="anonymous"
                     onError={() => setPitchVideoFailed(true)}
                     className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
@@ -575,9 +581,9 @@ const Landing = () => {
               <div className="relative w-full max-w-3xl overflow-hidden rounded-xl aspect-video animate-fade-in-up border border-white/10 bg-black/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                 {catalogueVideoFailed ? (
                   <img
-                    src="/viola.jpg"
+                    src={fallbackPoster}
                     alt="Catalog viewer placeholder"
-                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1 brightness-75"
+                    className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1 brightness-75 grayscale"
                   />
                 ) : (
                   <video
@@ -586,7 +592,7 @@ const Landing = () => {
                     loop
                     playsInline
                     preload="metadata"
-                    poster="/viola.jpg"
+                    poster={fallbackPoster}
                     crossOrigin="anonymous"
                     onError={() => setCatalogueVideoFailed(true)}
                     className="absolute inset-0 w-full h-full object-cover lg:-translate-y-5 md:-translate-y-4 sm:-translate-y-3 -translate-y-1"
