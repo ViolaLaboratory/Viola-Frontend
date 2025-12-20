@@ -18,11 +18,12 @@ const typingPhrases = [
 ];
 
 // Serve videos directly from the public folder to avoid bundling issues on deploy
-const heroVideo = `${import.meta.env.BASE_URL}viola_background.mp4`;
-const searchVideo = `${import.meta.env.BASE_URL}violaSearch.mp4`;
-const pitchVideo = `${import.meta.env.BASE_URL}violaPitchBuilder.mp4`;
-const catalogueVideo = `${import.meta.env.BASE_URL}violaCatalogue.mp4`;
-const fallbackPoster = `${import.meta.env.BASE_URL}viola.jpg`;
+const asset = (file: string) => `${import.meta.env.BASE_URL}${file}`;
+const heroVideo = asset("viola_background.mp4");
+const searchVideo = asset("violaSearch.mp4");
+const pitchVideo = asset("violaPitchBuilder.mp4");
+const catalogueVideo = asset("violaCatalogue.mp4");
+const fallbackPoster = asset("viola.jpg");
 
 /**
  * LogoMark Component
