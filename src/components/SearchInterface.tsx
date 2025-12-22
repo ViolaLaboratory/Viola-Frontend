@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Plus, Play, X, Check, ArrowRight } from "lucide-react";
 import { PitchBuilder } from "./PitchBuilder"; // Import your existing PitchBuilder
+import API_ENDPOINTS from "@/config/api";
+import { fetchTrackDetailsFromMongoDB } from "@/services/trackService";
 
 interface Song {
   id: number;
@@ -100,6 +102,11 @@ export const SearchInterface = () => {
   const [showPitchSelection, setShowPitchSelection] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [backgroundShift, setBackgroundShift] = useState({ x: 50, y: 50 });
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [chatMessage, setChatMessage] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<Song[]>([]);
+  const [conversationHistory, setConversationHistory] = useState<Array<{role: string, message: string}>>([]);
+  const [waitingForResponse, setWaitingForResponse] = useState(false);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -116,6 +123,51 @@ export const SearchInterface = () => {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
+  // Generate or retrieve session ID
+  useEffect(() => {
+    const getOrCreateSessionId = () => {
+      // Try to get from localStorage
+      const storedSessionId = localStorage.getItem('viola_session_id');
+      if (storedSessionId) {
+        setSessionId(storedSessionId);
+        return storedSessionId;
+      }
+      // Generate new UUID v4
+      const newSessionId = crypto.randomUUID();
+      localStorage.setItem('viola_session_id', newSessionId);
+      setSessionId(newSessionId);
+      return newSessionId;
+    };
+
+    const initSession = async () => {
+      const currentSessionId = getOrCreateSessionId();
+      try {
+        // Start conversation with "start" message
+        const response = await fetch(API_ENDPOINTS.CHATBOT_CHAT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_input: "start",
+            session_id: currentSessionId,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSessionId(data.session_id);
+          setChatMessage(data.message);
+          setConversationHistory([{ role: 'bot', message: data.message }]);
+        }
+      } catch (error) {
+        console.error("Failed to start session:", error);
+      }
+    };
+
+    initSession();
+  }, []);
+
   const translateX = (backgroundShift.x - 50) * 0.8;
   const translateY = (backgroundShift.y - 50) * 0.8;
 
@@ -126,18 +178,105 @@ export const SearchInterface = () => {
     "--bg-ty": `${translateY}px`
   } as React.CSSProperties;
 
+  // Fetch track details from MongoDB (falls back to ChromaDB)
+  const fetchTrackDetails = async (trackIds: string[]): Promise<Song[]> => {
+    try {
+      const tracks = await fetchTrackDetailsFromMongoDB(trackIds);
+      // Convert TrackDetails to Song format
+      return tracks.map((track) => ({
+        id: parseInt(track.id) || 0,
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        keywords: track.keywords || ["Music"],
+        duration: track.duration,
+      }));
+    } catch (error) {
+      console.error("Error fetching track details:", error);
+      // Fallback to placeholder songs
+      return trackIds.map((id, index) => ({
+        id: parseInt(id) || index + 1,
+        title: `Track ${id}`,
+        artist: "Unknown Artist",
+        album: "Unknown Album",
+        keywords: ["Music"],
+        duration: "03:00",
+      }));
+    }
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim() || !sessionId) return;
 
     setIsLoading(true);
     setHasSearched(true);
+    setWaitingForResponse(true);
     
-    // Simulate 2 second loading
-    setTimeout(() => {
+    // Add user message to conversation
+    const userMessage = searchQuery;
+    setConversationHistory(prev => [...prev, { role: 'user', message: userMessage }]);
+    
+    try {
+      const response = await fetch(API_ENDPOINTS.CHATBOT_CHAT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_input: searchQuery,
+          session_id: sessionId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Store session ID
+      if (data.session_id) {
+        setSessionId(data.session_id);
+        localStorage.setItem('viola_session_id', data.session_id);
+      }
+
+      // Add bot response to conversation
+      if (data.message) {
+        setChatMessage(data.message);
+        setConversationHistory(prev => [...prev, { role: 'bot', message: data.message }]);
+      }
+
+      // Check if conversation is complete and we have results
+      if (data.is_complete && data.results?.results?.ids?.[0]) {
+        // Extract track IDs from results
+        const trackIds = data.results.results.ids[0];
+        
+        // Fetch track details (or use placeholders for now)
+        const tracks = await fetchTrackDetails(trackIds);
+        setSearchResults(tracks);
+        setShowResults(true);
+        setIsLoading(false);
+        setWaitingForResponse(false);
+      } else {
+        // Conversation is still ongoing
+        setIsLoading(false);
+        setWaitingForResponse(false);
+        setShowResults(false);
+        // The chat message is already set above
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+      setChatMessage("Sorry, I encountered an error. Please try again.");
       setIsLoading(false);
+      setWaitingForResponse(false);
+      // Fallback to showing mock results if API fails
+      setSearchResults(mockSongs);
       setShowResults(true);
-    }, 2000);
+    }
+    
+    // Clear search input
+    setSearchQuery("");
   };
 
   const [placeholderText, setPlaceholderText] = useState("Find ");
@@ -207,6 +346,13 @@ export const SearchInterface = () => {
   const addToPitch = (song: Song) => {
     setSelectedSong(song);
     setShowPitchSelection(true);
+    
+    // Save track ID to localStorage for PitchBuilder
+    const savedTrackIds = JSON.parse(localStorage.getItem('pitch_track_ids') || '[]');
+    if (!savedTrackIds.includes(song.id.toString())) {
+      savedTrackIds.push(song.id.toString());
+      localStorage.setItem('pitch_track_ids', JSON.stringify(savedTrackIds));
+    }
   };
 
   const selectPitch = (pitch: any) => {
@@ -366,12 +512,12 @@ export const SearchInterface = () => {
               </div>
               <div className="flex justify-self-end mb-2">
                 <p className="text-sm text-white bg-black w-fit p-3 rounded-full bg-black/80">
-                    Ranked by relevance • {mockSongs.length} results
+                    Ranked by relevance • {searchResults.length} results
                   </p>
               </div>
 
               <div className="space-y-3 mb-8 z-8">
-                {mockSongs.map((song, index) => (
+                {searchResults.length > 0 ? searchResults.map((song, index) => (
                  <Card 
                  key={song.id} 
                  className="transition-all duration-500 bg-black/80 hover:shadow-lg hover:shadow-purple-500/10 cursor-pointer border hover:bg-muted/20 hover:backdrop-blur-lg"
@@ -439,8 +585,36 @@ export const SearchInterface = () => {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                )) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No results found. Try refining your search.
+                  </div>
+                )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Chat Interface - Show when conversation is ongoing */}
+        {chatMessage && !showResults && hasSearched && (
+          <div className="px-6 pt-8 pb-4 animate-fade-in max-w-3xl mx-auto">
+            <div className="space-y-4">
+              {conversationHistory.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-lg p-4 ${
+                      msg.role === 'user'
+                        ? 'bg-[#E4EA04] text-black'
+                        : 'bg-white/10 text-white border border-white/20'
+                    }`}
+                  >
+                    <p className="text-sm">{msg.message}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -449,7 +623,7 @@ export const SearchInterface = () => {
         <div
           className={`px-6 transition-all duration-700 ease-in-out ${
             hasSearched
-              ? "py-4   sticky top-0 z-30 /5"
+              ? "py-4 sticky top-0 z-30"
               : "flex flex-col items-center justify-center min-h-[calc(100vh-200px)]"
           }`}
         >
@@ -477,8 +651,8 @@ export const SearchInterface = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
-                  placeholder={placeholderText}
-                  className={`h-14 text-base border-0 bg-card focus-visible:ring-white rounded-full shadow-lg hover:border-white  shadow-white-500/30 transition-all duration-300 ${
+                  placeholder={chatMessage || placeholderText}
+                  className={`h-14 text-base border-0 bg-card focus-visible:ring-white rounded-full shadow-lg hover:border-white  shadow-white-500/30 transition-all duration-300 text-white placeholder:text-white/60 ${
                     isSearchFocused ? 'pl-16 pr-14' : 'pl-6 pr-6'
                   }`}
                   disabled={isLoading}

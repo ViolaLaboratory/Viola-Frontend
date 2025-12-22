@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Loader2, Paperclip, MoreHorizontal } from "lucide-react";
 import { MusicPlayer } from "./MusicPlayer";
+import API_ENDPOINTS from "@/config/api";
+import { fetchTrackDetailsFromMongoDB } from "@/services/trackService";
 
 const savedPitches = [
   "Stranger Things",
@@ -12,47 +14,111 @@ const savedPitches = [
   "Lego Batman",
 ];
 
-const recommendedSongs = [
-  {
-    id: 1,
-    title: "Static Bloom",
-    artist: "Vela Noir",
-    album: "Neon Afterglow",
-    thumbnail: "🎵",
-    producer: "Harper Woldt",
-    writer: "Vela Noir",
-    licensing: "Master + Publishing Ready",
-    keywords: ["Glitch", "Ethereal", "Analog"],
-    duration: "03:06",
-  },
-  {
-    id: 2,
-    title: "Ash Lanterns",
-    artist: "Orion Vale",
-    album: "Pale Signal",
-    thumbnail: "🎵",
-    producer: "Seraphine West",
-    writer: "Orion Vale",
-    licensing: "Pre-cleared",
-    keywords: ["Tension", "Noir", "Cinematic"],
-    duration: "04:28",
-  },
-  {
-    id: 3,
-    title: "Moonlit Concrete",
-    artist: "Midnight Highrise",
-    album: "Grayscale Echoes",
-    thumbnail: "🎵",
-    producer: "Anika Rhee",
-    writer: "Anika Rhee",
-    licensing: "Master + Publishing",
-    keywords: ["Industrial", "Pulse", "Noir"],
-    duration: "03:12",
-  },
-];
+// Fetch track details helper (uses MongoDB, falls back to ChromaDB)
+const fetchTrackDetails = async (trackIds: string[]): Promise<Song[]> => {
+  try {
+    const tracks = await fetchTrackDetailsFromMongoDB(trackIds);
+    // Convert TrackDetails to Song format
+    return tracks.map((track) => ({
+      id: parseInt(track.id) || 0,
+      title: track.title,
+      artist: track.artist,
+      album: track.album,
+      thumbnail: track.thumbnail || "🎵",
+      producer: track.producer || "Unknown Producer",
+      writer: track.writer || "Unknown Writer",
+      licensing: track.licensing || "Standard",
+      keywords: track.keywords || ["Music"],
+      duration: track.duration,
+    }));
+  } catch (error) {
+    console.error("Error fetching track details:", error);
+    // Fallback to placeholder data
+    return trackIds.map((id, index) => ({
+      id: parseInt(id) || index + 1,
+      title: `Track ${id}`,
+      artist: "Unknown Artist",
+      album: "Unknown Album",
+      thumbnail: "🎵",
+      producer: "Unknown Producer",
+      writer: "Unknown Writer",
+      licensing: "Standard",
+      keywords: ["Music"],
+      duration: "03:00",
+    }));
+  }
+};
+
+interface Song {
+  id: number;
+  title: string;
+  artist: string;
+  album: string;
+  thumbnail: string;
+  producer: string;
+  writer: string;
+  licensing: string;
+  keywords: string[];
+  duration: string;
+}
 
 export const PitchBuilder = () => {
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [recommendedSongs, setRecommendedSongs] = useState<Song[]>([]);
+  const [isLoadingSongs, setIsLoadingSongs] = useState(false);
+
+  // Fetch recommended songs for the pitch
+  useEffect(() => {
+    const loadRecommendedSongs = async () => {
+      setIsLoadingSongs(true);
+      try {
+        // Get track IDs from localStorage (set when songs are added from search)
+        const savedTrackIds = localStorage.getItem('pitch_track_ids');
+        
+        if (savedTrackIds) {
+          const trackIds = JSON.parse(savedTrackIds);
+          const songs = await fetchTrackDetails(trackIds);
+          setRecommendedSongs(songs);
+        } else {
+          // Fallback: Use CLAP API to get recommendations based on pitch description
+          // For "Stranger Things" pitch, search for suspenseful, eerie music
+          const response = await fetch(API_ENDPOINTS.CLAP_QUERY, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              payload: {
+                session_id: crypto.randomUUID(),
+                collected_info: {
+                  genre: null,
+                  emotion: "suspenseful",
+                  description: "eerie dark atmospheric music for suspenseful scene in woods",
+                },
+              },
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const trackIds = data.results?.ids?.[0] || [];
+            if (trackIds.length > 0) {
+              const songs = await fetchTrackDetails(trackIds.slice(0, 3)); // Get top 3
+              setRecommendedSongs(songs);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load recommended songs:", error);
+        // Fallback to empty array
+        setRecommendedSongs([]);
+      } finally {
+        setIsLoadingSongs(false);
+      }
+    };
+
+    loadRecommendedSongs();
+  }, []);
 
   const handleExport = () => {
     if (status === "loading") return;
@@ -139,8 +205,14 @@ export const PitchBuilder = () => {
         {/* Songs Section */}
         <div>
           <h2 className="text-xl text-white mb-4 font-dm">Songs</h2>
-          <div className="space-y-3 z-1">
-            {recommendedSongs.map((song) => (
+          {isLoadingSongs ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="ml-3 text-muted-foreground">Loading recommended songs...</p>
+            </div>
+          ) : recommendedSongs.length > 0 ? (
+            <div className="space-y-3 z-1">
+              {recommendedSongs.map((song) => (
               <div
                 key={song.id}
                 className="bg-card border border-border rounded-lg p-4 hover:bg-hover-row transition-colors"
@@ -173,7 +245,12 @@ export const PitchBuilder = () => {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No songs recommended yet. Add songs from the search results.
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}

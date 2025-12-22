@@ -1,6 +1,8 @@
-import { Play, Plus, MoreHorizontal } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Play, Plus, MoreHorizontal, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import API_ENDPOINTS from "@/config/api";
 
 interface Song {
   id: number;
@@ -15,7 +17,8 @@ interface Song {
   views?: string;
 }
 
-const songs: Song[] = [
+// Default/fallback songs
+const defaultSongs: Song[] = [
   {
     id: 1,
     title: "new Phone, new Me",
@@ -356,10 +359,127 @@ const songs: Song[] = [
 ];
 
 export const MusicCatalog = () => {
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 30; // Show 30 songs per page in the catalog
+
+  // Load songs from MongoDB backend API with pagination
+  const loadSongsFromBackend = async (page: number = 1) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.SONGS_LIST(page, pageSize));
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const fetchedTracks = data.results || [];
+      const pagination = data.pagination || {};
+
+      const catalogSongs: Song[] = fetchedTracks.map((track: any) => {
+        const songId = track.id || "0";
+        const songIdNum =
+          typeof songId === "string" ? parseInt(songId) || 0 : songId;
+
+        return {
+          id: songIdNum,
+          title: track.title || "Unknown Title",
+          artist: track.artist || "Unknown Artist",
+          album: track.album || "Unknown Album",
+          genre: track.genre || "Unknown",
+          mood: track.mood || "Unknown",
+          licensing: track.licensing || "Standard",
+          duration: track.duration || "03:00",
+          thumbnail: track.thumbnail || "🎵",
+        };
+      });
+
+      // Replace current page of songs
+      setSongs(catalogSongs);
+
+      // Use pagination info from backend when available
+      const totalPagesCount = pagination.total_pages || page;
+      setTotalPages(totalPagesCount);
+      setError(null);
+      return true;
+    } catch (error) {
+      console.error('Error loading from backend:', error);
+      return false;
+    }
+  };
+
+  const loadSongs = async (page: number = 1, append: boolean = false) => {
+    setIsLoading(true);
+    setError(null);
+    
+    // Use backend API to fetch from MongoDB
+    const success = await loadSongsFromBackend(page);
+    
+    if (!success && !append) {
+      setSongs([]);
+      setError('Failed to load songs from MongoDB. Please check your connection.');
+    }
+    
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadSongs(1, false);
+  }, []);
+
+  const handlePageChange = (page: number) => {
+    if (page === currentPage || page < 1 || page > totalPages || isLoading) {
+      return;
+    }
+    setCurrentPage(page);
+    loadSongs(page, false);
+  };
+
+  const getPageNumbers = () => {
+    const maxVisible = 7;
+    let start = Math.max(1, currentPage - 3);
+    let end = Math.min(totalPages, start + maxVisible - 1);
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    const pages: number[] = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
   return (
     <div className="bg-black w-full max-h-[calc(100vh-140px)] min-h-[60vh] overflow-y-auto rounded-xl border border-border bg-card/60 mt-6">
-      {/* Table Header */}
-      <div className="sticky top-0 z-10 grid grid-cols-[40px_60px_1fr_200px_120px_120px_120px_80px] gap-4 px-6 py-3 border-b border-border text-sm text-muted-foreground font-medium bg-card/90 backdrop-blur">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="ml-3 text-muted-foreground">Loading catalog from MongoDB...</p>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-12 px-6">
+          <p className="text-red-400 mb-4 text-center">{error}</p>
+          <Button
+            onClick={() => loadSongs(1, false)}
+            variant="outline"
+            className="bg-transparent border-white/20 text-white hover:bg-white/10"
+          >
+            Retry
+          </Button>
+        </div>
+      ) : songs.length === 0 ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground">No songs found.</p>
+        </div>
+      ) : (
+        <>
+          {/* Table Header */}
+          <div className="sticky top-0 z-10 grid grid-cols-[40px_60px_1fr_200px_120px_120px_120px_80px] gap-4 px-6 py-3 border-b border-border text-sm text-muted-foreground font-medium bg-card/90 backdrop-blur">
         <div>#</div>
         <div></div>
         <div>Title</div>
@@ -379,7 +499,7 @@ export const MusicCatalog = () => {
           >
             {/* Number / Play Button */}
             <div className="text-muted-foreground text-sm">
-              <span className="group-hover:hidden">{index + 1}</span>
+              <span className="group-hover:hidden">{(currentPage - 1) * pageSize + index + 1}</span>
               <Play className="hidden group-hover:block w-4 h-4 text-foreground" />
             </div>
 
@@ -431,6 +551,51 @@ export const MusicCatalog = () => {
           </div>
         ))}
       </div>
+      
+      {/* Pagination */}
+      <div className="flex items-center justify-between px-6 py-4 border-t border-border text-sm text-muted-foreground">
+        <span>
+          Page {currentPage} of {totalPages} • Showing {songs.length} songs per page
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-full bg-transparent border-white/20 text-white hover:bg-white/10 disabled:opacity-40"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1 || isLoading}
+          >
+            ‹
+          </Button>
+          {getPageNumbers().map((page) => (
+            <Button
+              key={page}
+              variant={page === currentPage ? "default" : "outline"}
+              size="sm"
+              className={`h-8 w-8 rounded-full px-0 ${
+                page === currentPage
+                  ? "bg-[#E74C3C] text-white border-transparent"
+                  : "bg-transparent border-white/20 text-white hover:bg-white/10"
+              }`}
+              onClick={() => handlePageChange(page)}
+              disabled={isLoading}
+            >
+              {page}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-full bg-transparent border-white/20 text-white hover:bg-white/10 disabled:opacity-40"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages || isLoading}
+          >
+            ›
+          </Button>
+        </div>
+      </div>
+        </>
+      )}
     </div>
   );
 };
