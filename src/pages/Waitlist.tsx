@@ -4,6 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Footer from "@/components/Footer";
 import AnimatedVLogo from "@/components/AnimatedVLogo";
 
@@ -59,6 +68,7 @@ const Waitlist = () => {
     lastName: "",
     email: "",
     relation: "",
+    customRelation: "", // For "Other" option
     favoriteSong: "",
     teamSize: "1", // Default to individual
     companyFake: "",
@@ -94,6 +104,13 @@ const Waitlist = () => {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that if "Other" is selected, customRelation must be filled
+    if (formData.relation === "Other" && !formData.customRelation.trim()) {
+      alert("Please specify your relation to the music industry.");
+      return;
+    }
+    
     setIsSubmitting(true);
 
     // Generate unique user ID for this submission
@@ -110,6 +127,7 @@ const Waitlist = () => {
         },
         body: JSON.stringify({
           ...formData,
+          relation: formData.relation === "Other" ? formData.customRelation : formData.relation,
           userId, // Include the unique user ID
         }),
       });
@@ -262,16 +280,62 @@ const Waitlist = () => {
               <Label htmlFor="relation" className="text-white font-medium">
                 Relation to the Music Industry <span className="text-[#e4ea04]">*</span>
               </Label>
-              <Input
-                id="relation"
-                name="relation"
-                type="text"
-                required
+              <Select
                 value={formData.relation}
-                onChange={handleInputChange}
-                placeholder="e.g., Music Supervisor, Curator, Producer"
-                className="w-full bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-[#e4ea04] focus:ring-[#e4ea04]"
-              />
+                onValueChange={(value) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    relation: value,
+                    customRelation: value === "Other" ? prev.customRelation : "",
+                  }));
+                }}
+                required
+              >
+                <SelectTrigger
+                  id="relation"
+                  className="w-full bg-white/5 border-white/20 text-white focus:border-[#e4ea04] focus:ring-[#e4ea04]"
+                >
+                  <SelectValue placeholder="Select your relation to the music industry" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border [&>button]:hidden">
+                  <SelectGroup>
+                    <SelectLabel className="text-muted-foreground">*Core Users</SelectLabel>
+                    <SelectItem value="Music Supervisor">Music Supervisor</SelectItem>
+                    <SelectItem value="Sync Agent">Sync Agent</SelectItem>
+                    <SelectItem value="Producer (Film / TV / Ads)">Producer (Film / TV / Ads)</SelectItem>
+                    <SelectItem value="Creative Director (Media / Advertising)">Creative Director (Media / Advertising)</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel className="text-muted-foreground">*Music Supply</SelectLabel>
+                    <SelectItem value="Label / Publisher (A&R or Sync)">Label / Publisher (A&R or Sync)</SelectItem>
+                    <SelectItem value="Independent Artist / Composer">Independent Artist / Composer</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel className="text-muted-foreground">*Adjacent</SelectLabel>
+                    <SelectItem value="Editor / Post-Production">Editor / Post-Production</SelectItem>
+                    <SelectItem value="Artist Manager">Artist Manager</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel className="text-muted-foreground">*Other</SelectLabel>
+                    <SelectItem value="Student / Intern">Student / Intern</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              {formData.relation === "Other" && (
+                <div className="mt-2">
+                  <Input
+                    id="customRelation"
+                    name="customRelation"
+                    type="text"
+                    required
+                    value={formData.customRelation}
+                    onChange={handleInputChange}
+                    placeholder="Please specify your relation"
+                    className="w-full bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-[#e4ea04] focus:ring-[#e4ea04]"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="space-y-2 flip-up" style={{ animationDelay: "300ms" }}>
