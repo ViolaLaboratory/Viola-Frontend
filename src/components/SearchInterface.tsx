@@ -27,14 +27,14 @@ const mockSongs: Song[] = [
 
     keywords: ["Eerie", "Suspenseful", "Dark", "Atmospheric"],
     duration: "03:24",
-    
+
   },
   {
     id: 2,
     title: "Forest of Shadows",
     artist: "Akira Yamaoka",
     album: "Silent Tracks",
-  
+
     keywords: ["Horror", "Tension", "Mysterious", "Cinematic"],
     duration: "04:12",
 
@@ -44,7 +44,7 @@ const mockSongs: Song[] = [
     title: "Moonlit Concrete",
     artist: "Midnight Highrise",
     album: "Grayscale Echoes",
-    
+
     keywords: ["Eerie", "Industrial", "Pulse", "Noir"],
     duration: "03:12",
 
@@ -54,7 +54,7 @@ const mockSongs: Song[] = [
     title: "Fog Ritual",
     artist: "Astra & The Veil",
     album: "Coven Choir",
-   
+
     keywords: ["Choir", "Haunting", "Ambient", "Slow Burn"],
     duration: "04:05",
 
@@ -64,7 +64,7 @@ const mockSongs: Song[] = [
     title: "Midnight Salt",
     artist: "Vox Meridian",
     album: "Glassheart",
-    
+
     keywords: ["Darkwave", "Ethereal", "Cold", "Electronic"],
     duration: "03:58",
 
@@ -105,8 +105,9 @@ export const SearchInterface = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Song[]>([]);
-  const [conversationHistory, setConversationHistory] = useState<Array<{role: string, message: string}>>([]);
+  const [conversationHistory, setConversationHistory] = useState<Array<{ role: string, message: string }>>([]);
   const [waitingForResponse, setWaitingForResponse] = useState(false);
+  const [isFirstMessage, setIsFirstMessage] = useState(true);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -123,49 +124,18 @@ export const SearchInterface = () => {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Generate or retrieve session ID
+  // Generate or retrieve session ID on mount
   useEffect(() => {
-    const getOrCreateSessionId = () => {
-      // Try to get from localStorage
-      const storedSessionId = localStorage.getItem('viola_session_id');
-      if (storedSessionId) {
-        setSessionId(storedSessionId);
-        return storedSessionId;
-      }
-      // Generate new UUID v4
+    const storedSessionId = localStorage.getItem('viola_session_id');
+    if (storedSessionId) {
+      setSessionId(storedSessionId);
+    } else {
       const newSessionId = crypto.randomUUID();
       localStorage.setItem('viola_session_id', newSessionId);
       setSessionId(newSessionId);
-      return newSessionId;
-    };
-
-    const initSession = async () => {
-      const currentSessionId = getOrCreateSessionId();
-      try {
-        // Start conversation with "start" message
-        const response = await fetch(API_ENDPOINTS.CHATBOT_CHAT, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_input: "start",
-            session_id: currentSessionId,
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setSessionId(data.session_id);
-          setChatMessage(data.message);
-          setConversationHistory([{ role: 'bot', message: data.message }]);
-        }
-      } catch (error) {
-        console.error("Failed to start session:", error);
-      }
-    };
-
-    initSession();
+    }
+    // Set default welcome message
+    setChatMessage("Hi! Tell me what kind of music you'd like, and I'll help you find the perfect tracks.");
   }, []);
 
   const translateX = (backgroundShift.x - 50) * 0.8;
@@ -218,16 +188,23 @@ export const SearchInterface = () => {
     setConversationHistory(prev => [...prev, { role: 'user', message: userMessage }]);
     
     try {
-      const response = await fetch(API_ENDPOINTS.CHATBOT_CHAT, {
+      // Call backend search endpoint (proxies to chatbot, then CLAP when complete)
+      const response = await fetch(API_ENDPOINTS.MUSIC_SEARCH, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_input: searchQuery,
+          query: searchQuery,
           session_id: sessionId,
+          is_new_session: isFirstMessage, // used to tell the backend to initialize a new chatbot session
         }),
       });
+
+      // Mark that we've sent the first message
+      if (isFirstMessage) {
+        setIsFirstMessage(false);
+      }
 
       if (!response.ok) {
         throw new Error(`Search failed: ${response.status}`);
@@ -248,22 +225,27 @@ export const SearchInterface = () => {
       }
 
       // Check if conversation is complete and we have results
-      if (data.is_complete && data.results?.results?.ids?.[0]) {
-        // Extract track IDs from results
-        const trackIds = data.results.results.ids[0];
-        
-        // Fetch track details (or use placeholders for now)
-        const tracks = await fetchTrackDetails(trackIds);
-        setSearchResults(tracks);
+      if (data.is_complete && data.tracks && data.tracks.length > 0) {
+        // Use tracks directly from backend response (no separate fetch needed)
+
+        const songs = data.tracks.map((track: any) => ({
+          id: parseInt(track.id) || 0,
+          title: track.title || 'Unknown Title',
+          artist: track.artist || 'Unknown Artist',
+          album: track.album || 'Unknown Album',
+          keywords: [track.genre || 'Music'],
+          duration: track.duration || '03:00',
+        }));
+
+        setSearchResults(songs);
         setShowResults(true);
         setIsLoading(false);
         setWaitingForResponse(false);
       } else {
-        // Conversation is still ongoing
+        // Conversation is still ongoing - bot is asking for more info
         setIsLoading(false);
         setWaitingForResponse(false);
         setShowResults(false);
-        // The chat message is already set above
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -274,7 +256,7 @@ export const SearchInterface = () => {
       setSearchResults(mockSongs);
       setShowResults(true);
     }
-    
+
     // Clear search input
     setSearchQuery("");
   };
@@ -329,7 +311,7 @@ export const SearchInterface = () => {
         charIndex++;
         if (charIndex > phrase.length) {
           deleting = true;
-          setTimeout(() => {}, 2000);
+          setTimeout(() => { }, 2000);
         }
       } else {
         charIndex--;
@@ -346,7 +328,7 @@ export const SearchInterface = () => {
   const addToPitch = (song: Song) => {
     setSelectedSong(song);
     setShowPitchSelection(true);
-    
+
     // Save track ID to localStorage for PitchBuilder
     const savedTrackIds = JSON.parse(localStorage.getItem('pitch_track_ids') || '[]');
     if (!savedTrackIds.includes(song.id.toString())) {
@@ -512,18 +494,18 @@ export const SearchInterface = () => {
               </div>
               <div className="flex justify-self-end mb-2">
                 <p className="text-sm text-white bg-black w-fit p-3 rounded-full bg-black/80">
-                    Ranked by relevance • {searchResults.length} results
-                  </p>
+                  Ranked by relevance • {searchResults.length} results
+                </p>
               </div>
 
               <div className="space-y-3 mb-8 z-8">
                 {searchResults.length > 0 ? searchResults.map((song, index) => (
-                 <Card 
-                 key={song.id} 
-                 className="transition-all duration-500 bg-black/80 hover:shadow-lg hover:shadow-purple-500/10 cursor-pointer border hover:bg-muted/20 hover:backdrop-blur-lg"
-                 onClick={() => addToPitch(song)}
-                 style={{ fontFamily: 'Inter, system-ui, sans-serif !important' }}
-               >
+                  <Card
+                    key={song.id}
+                    className="transition-all duration-500 bg-black/80 hover:shadow-lg hover:shadow-purple-500/10 cursor-pointer border hover:bg-muted/20 hover:backdrop-blur-lg"
+                    onClick={() => addToPitch(song)}
+                    style={{ fontFamily: 'Inter, system-ui, sans-serif !important' }}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
                         {/* Rank Number */}
@@ -535,10 +517,10 @@ export const SearchInterface = () => {
 
                         {/* Album Art Placeholder */}
                         <div className="w-16 h-16 bg-gradient-to-br from-purple-800 to-orange-900 rounded-lg flex-shrink-0 flex items-center justify-center">
-                          <img 
-                          src="/NoteAlbumArt.png"
-                          alt="Album Art"
-                          className="rounded-sm"
+                          <img
+                            src="/NoteAlbumArt.png"
+                            alt="Album Art"
+                            className="rounded-sm"
                           />
                         </div>
 
@@ -546,13 +528,13 @@ export const SearchInterface = () => {
                         <div className="flex-1 min-w-0 inter">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="font-semibold text-lg">{song.title}</h3>
-                            <span className="text-muted-foreground italic">{song.artist}</span>  • 
+                            <span className="text-muted-foreground italic">{song.artist}</span>  •
                             <span className="text-foreground">{song.album}</span>
                             {/* <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                               {song.relevanceScore}% match
                             </Badge> */}
                           </div>
-                          
+
                           {/* <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
                             <span>{song.producer}</span>
                             <span className="italic">{song.writer}</span>
@@ -605,11 +587,10 @@ export const SearchInterface = () => {
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-lg p-4 ${
-                      msg.role === 'user'
-                        ? 'bg-[#E4EA04] text-black'
-                        : 'bg-white/10 text-white border border-white/20'
-                    }`}
+                    className={`max-w-[80%] rounded-lg p-4 ${msg.role === 'user'
+                      ? 'bg-[#E4EA04] text-black'
+                      : 'bg-white/10 text-white border border-white/20'
+                      }`}
                   >
                     <p className="text-sm">{msg.message}</p>
                   </div>
@@ -621,13 +602,12 @@ export const SearchInterface = () => {
 
         {/* Search Section - Bottom when results shown */}
         <div
-          className={`px-6 transition-all duration-700 ease-in-out ${
-            hasSearched
-              ? "py-4 sticky top-0 z-30"
-              : "flex flex-col items-center justify-center min-h-[calc(100vh-200px)]"
-          }`}
+          className={`px-6 transition-all duration-700 ease-in-out ${hasSearched
+            ? "py-4 sticky top-0 z-30"
+            : "flex flex-col items-center justify-center min-h-[calc(100vh-200px)]"
+            }`}
         >
-          
+
           {/* Title - disappears when searched */}
           {!hasSearched && (
             <h1 className="text-4xl font-light text mb-8">
@@ -642,9 +622,8 @@ export const SearchInterface = () => {
                 <img
                   src="/flower.png"
                   alt="Viola"
-                  className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full object-cover transition-all duration-300 ${
-                    isSearchFocused ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
-                  }`}
+                  className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full object-cover transition-all duration-300 ${isSearchFocused ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
+                    }`}
                 />
                 <Input
                   value={searchQuery}
@@ -652,18 +631,16 @@ export const SearchInterface = () => {
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
                   placeholder={chatMessage || placeholderText}
-                  className={`h-14 text-base border-0 bg-card focus-visible:ring-white rounded-full shadow-lg hover:border-white  shadow-white-500/30 transition-all duration-300 text-white placeholder:text-white/60 ${
-                    isSearchFocused ? 'pl-16 pr-14' : 'pl-6 pr-6'
-                  }`}
+                  className={`h-14 text-base border-0 bg-card focus-visible:ring-white rounded-full shadow-lg hover:border-white  shadow-white-500/30 transition-all duration-300 text-white placeholder:text-white/60 ${isSearchFocused ? 'pl-16 pr-14' : 'pl-6 pr-6'
+                    }`}
                   disabled={isLoading}
                 />
                 {isLoading && (
                   <Loader2 className="absolute right-6 top-1/2 transform -translate-y-1/2 h-5 w-5 animate-spin text-purple-500" />
                 )}
                 {!isLoading && isSearchFocused && (
-                  <ArrowRight className={`absolute right-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white transition-all duration-300 ${
-                    isSearchFocused ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
-                  }`} />
+                  <ArrowRight className={`absolute right-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white transition-all duration-300 ${isSearchFocused ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
+                    }`} />
                 )}
               </div>
             </div>
@@ -694,14 +671,14 @@ export const SearchInterface = () => {
                   <X className="h-4 w-4 m-2 hover:bg-[#e4ea04]" />
                 </Button>
               </div>
-              
+
               {selectedSong && (
                 <div className="flex content-center gap-3 p-3 bg-muted/50 rounded-sm">
                   <div className="w-12 h-12 bg-gradient-to-br flex items-center justify-center">
                     <img
-                    src="/NoteAlbumArt.png"
-                    alt="Album Art"
-                    className="rounded-sm w-full h-full"/>
+                      src="/NoteAlbumArt.png"
+                      alt="Album Art"
+                      className="rounded-sm w-full h-full" />
                   </div>
                   <div>
                     <div className="font-medium">{selectedSong.title}</div>
@@ -710,7 +687,7 @@ export const SearchInterface = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="p-6">
               <h3 className="text-lg font-medium mb-4">Select a pitch to add this song to:</h3>
               <div className="space-y-3">

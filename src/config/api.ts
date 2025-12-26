@@ -26,6 +26,12 @@ export const API_ENDPOINTS = {
   
   // CLAP Model API (for direct music recommendations)
   CLAP_QUERY: CLAP_API_URL,
+
+  // Chatbot Search (via backend proxy - avoids CORS)
+  MUSIC_SEARCH: `${API_BASE_URL}/music/search/`,
+
+  // Batch track fetch (avoids N+1 queries)
+  TRACKS_BATCH: `${API_BASE_URL}/music/tracks/batch/`,
 };
 
 export default API_ENDPOINTS;
