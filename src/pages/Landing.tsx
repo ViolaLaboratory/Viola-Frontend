@@ -301,11 +301,11 @@ const Landing = () => {
 
         <div className="text-center font-dm max-w-6xl mx-auto relative z-10 space-y-8">
           <h1 className="font-[500] font-zen drop-shadow-[0px_0px_3px_rgba(255,255,255,1)] text-4xl sm:text-6xl lg:text-7xl font-[500] tracking-tight opacity-0 animate-fade-in-up [animation-delay:400ms]">
-            from brief to cleared <br></br>track &lt; 30 minutes.
+            Pitch Your Catalog Efficiently and Effortlessly
           </h1>
 
           <p className="text-md md:text-xl max-w-3xl text-white/70 mx-auto opacity-0 animate-fade-in-up [animation-delay:600ms]">
-          Viola is an AI music workspace for sync teams and tastemakers. Find, shortlist, and clear the right track without losing your day or your sanity.
+          Viola is an AI music workspace for sync teams and the creative tastemakers. Locate, Shortlist, and Clear the right tracks without losing your day and sanity.
           </p>
 
           <div className="cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-4 opacity-0 animate-fade-in-up [animation-delay:800ms]">
@@ -410,16 +410,16 @@ const Landing = () => {
                 </h2>
                 <div className="text-white/90 space-y-4 md:space-y-2">
                   <p className="text-base md:text-lg">
-                    If you work in sync, you already know the drill
+                    If you work in sync or as a creative, you already know the inefficiencies of pitching tracks
                   </p>
 
                   <ul className="list-disc pl-5 md:pl-6 space-y-1 md:space-y-2 lg:space-y-5">
-                    <li className="text-sm md:text-base lg:text-lg">3–4 hours of manual searching for every placement</li>
+                    <li className="text-sm md:text-base lg:text-lg">3–4 hours of manual searching and sifting tracks for every placement</li>
                     <li className="text-sm md:text-base lg:text-lg">
-                    Endless scrolling and half-listening to find “the one”
+                    Endless scrolling and listening to find the perfect track
                     </li>
                     <li className="text-sm md:text-base lg:text-lg">
-                    Messy email chains and spreadsheets for every license
+                    Unorganized communication for every license negotiated
                     </li>
                   </ul>
 
@@ -468,15 +468,12 @@ const Landing = () => {
           <div className="relative z-10 px-6 md:px-12 py-12 md:py-16 lg:py-20 text-center space-y-3 md:space-y-4">
             <p className="uppercase tracking-[0.25em] text-xs">Locate · Listen · License</p>
             <h2 className="font-zen font-semibold text-3xl md:text-4xl lg:text-5xl leading-tight max-w-5xl mx-auto">
-              From <span className="italic">“I'll Know It When I Hear It”</span>
+              From <span className="italic">"I'll Know It When I Hear It"</span>
               <br className="hidden md:block" />
-              <span className="md:inline block mt-2 md:mt-0 font-dm">to Pitched. One Place.</span>
+              <span className="md:inline block mt-2 md:mt-0 font-dm">to Easily Pitched.</span>
+              <br className="hidden md:block" />
+              <span className="md:inline block mt-2 md:mt-0 font-dm">All Done in One Place.</span>
             </h2>
-            <p className="text-sm md:text-base max-w-3xl mx-auto">
-            Viola auto-tags your catalog and lets you search it the way you talk. Drag your songs in once, and our AI adds rich metadata in the background. Then type briefs in natural language and the catalog reorders itself from best fit to worst fit.
-
-            One workspace to locate, listen, and license.
-            </p>
           </div>
         </div>
       </section>
@@ -519,11 +516,11 @@ const Landing = () => {
                 <span className="text-sm font-medium">AI Search</span>
               </div>
               <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
-                Find the perfect track in seconds
+                Find the Perfect Track in Seconds
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
-              Type what you’d say in the spotting session: “dark and eerie song while the lead girl and boy are chased in the woods, subtle vocal, 130 bpm, no explicit lyrics.” 
-              Viola understands mood, genre, tempo, lyrics, and story context. No more blind keyword guessing or endless scroll. Just say what you need, and Viola pulls the tracks that actually feel right.            </p>
+              Type what you would say in your natural language: "dark and eerie songs where the lead girl and boy are being chased in the woods, subtle vocal, 130 bpm, no explicit lyrics." Viola understands the mood, genre, tempo, reference, and story context. No more blind metadata  keyword filtering and guessing, or endless scroll. Just say what you need, and Viola pulls the right tracks that actually feels right to you.
+              </p>
             </div>
           </div>
         </section>
@@ -565,12 +562,10 @@ const Landing = () => {
                 <span className="text-sm font-medium">Pitch Kit Builder</span>
               </div>
               <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
-                Curate with confidence
+                Curate with Confidence
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
-              Build ready-to-send pitch kits in a few clicks. Viola pulls in metadata, art, and 
-              links for every track automatically, 
-              so your decks and folders are clean, consistent, and synced to the catalog.
+              Build ready-to-send pitch kits in a few clicks. Viola pulls in metadata, covert art, licensing information, and audio files for every track automatically to ensure that organization is clean, consistent, and synced to the catalog.
               </p>
             </div>
           </div>
@@ -613,11 +608,10 @@ const Landing = () => {
                 <span className="text-sm font-medium">Catalog Viewer</span>
               </div>
               <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
-                Clear tracks faster than ever
+                Clear Tracks Faster than Ever
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
-              Store your entire catalog in one place. See metadata, context, and licensing status at a glance. 
-              Because Catalog, Search, and Pitch Kits live together, every song is one click away from being pitched or cleared.
+              Drag and drop all your songs, and have it all in one place. See metadata, mood, and licensing status at a glance. Having the catalog integrated with the smart catalog search engine and pitch kit builder, Viola streamlines the music sync process in one workspace. 
               </p>
               
             </div>
@@ -644,7 +638,7 @@ const Landing = () => {
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="text-center">
             <p className="uppercase tracking-[0.2em] text-white font-dm text-xs mb-3">Outcomes</p>
-            <h2 className="text-3xl md:text-4xl font-zen font-semibold text-white">What changes when you use Viola.</h2>
+            <h2 className="text-3xl md:text-4xl font-zen font-semibold text-white">What changes when you use Viola</h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 ">
