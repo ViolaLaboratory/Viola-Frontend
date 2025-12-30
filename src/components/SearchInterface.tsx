@@ -3,10 +3,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription 
+} from "@/components/ui/dialog";
 import { Loader2, Plus, Play, X, Check, ArrowRight } from "lucide-react";
 import { PitchBuilder } from "./PitchBuilder"; // Import your existing PitchBuilder
 import API_ENDPOINTS from "@/config/api";
 import { fetchTrackDetailsFromMongoDB } from "@/services/trackService";
+import { getFolders, addTracksToFolder, type Folder } from "@/services/folderService";
 
 interface Song {
   id: number;
@@ -85,13 +94,6 @@ const thinkingPhrases = [
 ];
 
 
-const availablePitches = [
-  { id: 1, name: "Stranger Things", company: "Netflix", color: "bg-red-500", description: "S1E3 Woods Scene" },
-  { id: 2, name: "The White Lotus", company: "HBO Max", color: "bg-purple-500", description: "Season 2 Resort Scenes" },
-  { id: 3, name: "Now You See Me: Now You Don't", company: "Lionsgate", color: "bg-blue-500", description: "Magic Heist Sequences" },
-  { id: 4, name: "Adidas", company: "Adidas", color: "bg-black", description: "Athletic Campaign 2024" },
-  { id: 5, name: "Lego Batman", company: "Warner Bros", color: "bg-yellow-500", description: "Hero Action Scenes" }
-];
 
 export const SearchInterface = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,6 +103,9 @@ export const SearchInterface = () => {
   const [showPitchBuilder, setShowPitchBuilder] = useState(false);
   const [showPitchSelection, setShowPitchSelection] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<Set<number>>(new Set());
+  const [showFolderDialog, setShowFolderDialog] = useState(false);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [backgroundShift, setBackgroundShift] = useState({ x: 50, y: 50 });
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatMessage, setChatMessage] = useState<string>("");
@@ -136,6 +141,9 @@ export const SearchInterface = () => {
     }
     // Set default welcome message
     setChatMessage("Hi! Tell me what kind of music you'd like, and I'll help you find the perfect tracks.");
+    
+    // Load folders
+    setFolders(getFolders());
   }, []);
 
   const translateX = (backgroundShift.x - 50) * 0.8;
@@ -325,11 +333,39 @@ export const SearchInterface = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  const toggleTrackSelection = (songId: number) => {
+    setSelectedTrackIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(songId)) {
+        newSet.delete(songId);
+      } else {
+        newSet.add(songId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSaveToFolder = () => {
+    if (selectedTrackIds.size === 0) {
+      return;
+    }
+    setShowFolderDialog(true);
+  };
+
+  const saveTracksToFolder = (folderId: string) => {
+    const trackIdsToSave = Array.from(selectedTrackIds).map(id => id.toString());
+    addTracksToFolder(folderId, trackIdsToSave);
+    setShowFolderDialog(false);
+    setSelectedTrackIds(new Set());
+    // Show success feedback (could use a toast here)
+    alert(`Saved ${trackIdsToSave.length} track(s) to folder`);
+  };
+
   const addToPitch = (song: Song) => {
     setSelectedSong(song);
     setShowPitchSelection(true);
 
-    // Save track ID to localStorage for PitchBuilder
+    // Save track ID to localStorage for PitchBuilder (legacy support)
     const savedTrackIds = JSON.parse(localStorage.getItem('pitch_track_ids') || '[]');
     if (!savedTrackIds.includes(song.id.toString())) {
       savedTrackIds.push(song.id.toString());
@@ -337,9 +373,19 @@ export const SearchInterface = () => {
     }
   };
 
-  const selectPitch = (pitch: any) => {
+  const selectPitch = (folder: Folder) => {
+    if (selectedSong) {
+      // Add the selected song to the chosen folder
+      addTracksToFolder(folder.id, [selectedSong.id.toString()]);
+      
+      // Refresh folders to show updated track counts
+      setFolders(getFolders());
+      
+      // Show success feedback
+      alert(`Added "${selectedSong.title}" to ${folder.name}`);
+    }
     setShowPitchSelection(false);
-    setShowPitchBuilder(true);
+    setSelectedSong(null);
   };
 
   if (showPitchBuilder) {
@@ -492,10 +538,18 @@ export const SearchInterface = () => {
                   Let me know if these are the top songs that sound like your search for "{searchQuery}".
                 </h2>
               </div>
-              <div className="flex justify-self-end mb-2">
+              <div className="flex justify-between items-center mb-2">
                 <p className="text-sm text-white bg-black w-fit p-3 rounded-full bg-black/80">
                   Ranked by relevance • {searchResults.length} results
                 </p>
+                {selectedTrackIds.size > 0 && (
+                  <Button
+                    onClick={handleSaveToFolder}
+                    className="bg-[#E4EA04] hover:bg-[#B5C929] text-black font-medium"
+                  >
+                    Save {selectedTrackIds.size} track{selectedTrackIds.size > 1 ? 's' : ''} to Folder
+                  </Button>
+                )}
               </div>
 
               <div className="space-y-3 mb-8 z-8">
@@ -508,6 +562,12 @@ export const SearchInterface = () => {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
+                        {/* Checkbox */}
+                        <Checkbox
+                          checked={selectedTrackIds.has(song.id)}
+                          onCheckedChange={() => toggleTrackSelection(song.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
                         {/* Rank Number */}
                         <div className="flex-shrink-0 w-8 text-center">
                           <span className="text-xl font-bold text-white-600">
@@ -655,6 +715,42 @@ export const SearchInterface = () => {
         </div>
       </div>
 
+      {/* Folder Selection Dialog */}
+      <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Tracks to Folder</DialogTitle>
+            <DialogDescription>
+              Select a folder to save {selectedTrackIds.size} track{selectedTrackIds.size > 1 ? 's' : ''} to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {folders.map((folder) => (
+              <button
+                key={folder.id}
+                onClick={() => saveTracksToFolder(folder.id)}
+                className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-transparent hover:border-purple-200 hover:bg-purple-50/10 transition-all duration-200 text-left group"
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                  {folder.name.charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-lg">{folder.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {folder.trackIds.length} track{folder.trackIds.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="w-8 h-8 bg-[#E4EA04] rounded-full flex items-center justify-center">
+                    <Check className="h-4 w-4 text-black" />
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Pitch Selection Modal */}
       {showPitchSelection && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm drop-shadow-sm flex items-center justify-center z-50 p-4">
@@ -689,20 +785,22 @@ export const SearchInterface = () => {
             </div>
 
             <div className="p-6">
-              <h3 className="text-lg font-medium mb-4">Select a pitch to add this song to:</h3>
-              <div className="space-y-3">
-                {availablePitches.map((pitch) => (
+              <h3 className="text-lg font-medium mb-4">Select a folder to add this song to:</h3>
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {folders.map((folder) => (
                   <button
-                    key={pitch.id}
-                    onClick={() => selectPitch(pitch)}
+                    key={folder.id}
+                    onClick={() => selectPitch(folder)}
                     className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-transparent hover:border-purple-200 hover:bg-purple-50/10 transition-all duration-200 text-left group"
                   >
-                    <div className={`w-12 h-12 ${pitch.color} rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
-                      {pitch.name.charAt(0)}
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                      {folder.name.charAt(0)}
                     </div>
                     <div className="flex-1">
-                      <div className="font-semibold text-lg">{pitch.name}</div>
-                      <div className="text-sm text-muted-foreground">{pitch.company} • {pitch.description}</div>
+                      <div className="font-semibold text-lg">{folder.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {folder.trackIds.length} track{folder.trackIds.length !== 1 ? 's' : ''}
+                      </div>
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <div className="w-8 h-8 bg-[#E4EA04] rounded-full flex items-center justify-center">

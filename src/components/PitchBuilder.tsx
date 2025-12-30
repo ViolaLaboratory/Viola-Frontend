@@ -1,18 +1,41 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Loader2, Paperclip, MoreHorizontal } from "lucide-react";
-import { MusicPlayer } from "./MusicPlayer";
+import { Input } from "@/components/ui/input";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter 
+} from "@/components/ui/dialog";
+import { CheckCircle2, Loader2, Paperclip, MoreHorizontal, Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import API_ENDPOINTS from "@/config/api";
 import { fetchTrackDetailsFromMongoDB } from "@/services/trackService";
-
-const savedPitches = [
-  "Stranger Things",
-  "The White Lotus", 
-  "Now You See Me: Now You Don't",
-  "Adidas",
-  "Lego Batman",
-];
+import { 
+  getFolders, 
+  createFolder, 
+  getFolderById,
+  addTracksToFolder,
+  updateFolderName,
+  deleteFolder,
+  removeTracksFromFolder,
+  type Folder 
+} from "@/services/folderService";
 
 // Fetch track details helper (uses MongoDB, falls back to ChromaDB)
 const fetchTrackDetails = async (trackIds: string[]): Promise<Song[]> => {
@@ -66,51 +89,40 @@ export const PitchBuilder = () => {
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
   const [recommendedSongs, setRecommendedSongs] = useState<Song[]>([]);
   const [isLoadingSongs, setIsLoadingSongs] = useState(false);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [renameFolderId, setRenameFolderId] = useState<string | null>(null);
+  const [renameFolderName, setRenameFolderName] = useState("");
 
-  // Fetch recommended songs for the pitch
+  // Load folders on mount
+  useEffect(() => {
+    const foldersList = getFolders();
+    setFolders(foldersList);
+    // Select first folder by default
+    if (foldersList.length > 0 && !selectedFolderId) {
+      setSelectedFolderId(foldersList[0].id);
+    }
+  }, []);
+
+  // Fetch recommended songs for the selected folder
   useEffect(() => {
     const loadRecommendedSongs = async () => {
+      if (!selectedFolderId) return;
+      
       setIsLoadingSongs(true);
       try {
-        // Get track IDs from localStorage (set when songs are added from search)
-        const savedTrackIds = localStorage.getItem('pitch_track_ids');
-        
-        if (savedTrackIds) {
-          const trackIds = JSON.parse(savedTrackIds);
-          const songs = await fetchTrackDetails(trackIds);
+        const folder = getFolderById(selectedFolderId);
+        if (folder && folder.trackIds.length > 0) {
+          const songs = await fetchTrackDetails(folder.trackIds);
           setRecommendedSongs(songs);
         } else {
-          // Fallback: Use CLAP API to get recommendations based on pitch description
-          // For "Stranger Things" pitch, search for suspenseful, eerie music
-          const response = await fetch(API_ENDPOINTS.CLAP_QUERY, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              payload: {
-                session_id: crypto.randomUUID(),
-                collected_info: {
-                  genre: null,
-                  emotion: "suspenseful",
-                  description: "eerie dark atmospheric music for suspenseful scene in woods",
-                },
-              },
-            }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const trackIds = data.results?.ids?.[0] || [];
-            if (trackIds.length > 0) {
-              const songs = await fetchTrackDetails(trackIds.slice(0, 3)); // Get top 3
-              setRecommendedSongs(songs);
-            }
-          }
+          setRecommendedSongs([]);
         }
       } catch (error) {
         console.error("Failed to load recommended songs:", error);
-        // Fallback to empty array
         setRecommendedSongs([]);
       } finally {
         setIsLoadingSongs(false);
@@ -118,20 +130,113 @@ export const PitchBuilder = () => {
     };
 
     loadRecommendedSongs();
-  }, []);
+  }, [selectedFolderId]);
 
-  const handleExport = () => {
-    if (status === "loading") return;
+  const handleCreateFolder = () => {
+    if (newFolderName.trim()) {
+      const newFolder = createFolder(newFolderName.trim());
+      setFolders(getFolders());
+      setSelectedFolderId(newFolder.id);
+      setShowCreateDialog(false);
+      setNewFolderName("");
+    }
+  };
+
+  const handleRenameFolder = (folderId: string) => {
+    const folder = getFolderById(folderId);
+    if (folder) {
+      setRenameFolderId(folderId);
+      setRenameFolderName(folder.name);
+      setShowRenameDialog(true);
+    }
+  };
+
+  const handleSaveRename = () => {
+    if (renameFolderId && renameFolderName.trim()) {
+      updateFolderName(renameFolderId, renameFolderName.trim());
+      setFolders(getFolders());
+      setShowRenameDialog(false);
+      setRenameFolderId(null);
+      setRenameFolderName("");
+    }
+  };
+
+  const handleDeleteFolder = (folderId: string) => {
+    if (window.confirm("Are you sure you want to delete this folder? This action cannot be undone.")) {
+      deleteFolder(folderId);
+      const updatedFolders = getFolders();
+      setFolders(updatedFolders);
+      
+      // If the deleted folder was selected, select another folder or clear selection
+      if (selectedFolderId === folderId) {
+        if (updatedFolders.length > 0) {
+          setSelectedFolderId(updatedFolders[0].id);
+        } else {
+          setSelectedFolderId(null);
+        }
+      }
+    }
+  };
+
+  const handleRemoveTrackFromFolder = (trackId: number) => {
+    if (!selectedFolderId) return;
+    
+    removeTracksFromFolder(selectedFolderId, [trackId.toString()]);
+    
+    // Update the recommended songs list by removing the deleted track
+    setRecommendedSongs(prev => prev.filter(song => song.id !== trackId));
+    
+    // Refresh folders to ensure state is in sync
+    setFolders(getFolders());
+  };
+
+
+  const handleExport = async () => {
+    if (status === "loading" || !selectedFolderId) return;
 
     setStatus("loading");
 
-    setTimeout(() => {
-      setStatus("success");
+    try {
+      // Dynamic import for JSZip
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+      
+      const folder = getFolderById(selectedFolderId);
+      if (!folder || folder.trackIds.length === 0) {
+        throw new Error("No tracks to export");
+      }
 
+      // Create a text file with track information for each track
+      for (const trackId of folder.trackIds) {
+        const trackDetails = await fetchTrackDetails([trackId]);
+        if (trackDetails.length > 0) {
+          const track = trackDetails[0];
+          const trackInfo = `Title: ${track.title}\nArtist: ${track.artist}\nAlbum: ${track.album}\nDuration: ${track.duration}\nProducer: ${track.producer}\nWriter: ${track.writer}\nLicensing: ${track.licensing}\nKeywords: ${track.keywords.join(", ")}\n`;
+          zip.file(`${track.title.replace(/[^a-z0-9]/gi, "_")}_${trackId}.txt`, trackInfo);
+        }
+      }
+
+      // Generate ZIP file and trigger download
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${folder.name.replace(/[^a-z0-9]/gi, "_")}_tracks.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setStatus("success");
       setTimeout(() => {
         setStatus("idle");
       }, 1800);
-    }, 1800);
+    } catch (error) {
+      console.error("Export error:", error);
+      // If JSZip is not available, show a fallback message
+      setStatus("idle");
+      alert("Export functionality requires JSZip library. Please install it: npm install jszip");
+    }
   };
 
   return (
@@ -155,21 +260,59 @@ export const PitchBuilder = () => {
       {/* Left Sidebar */}
       <aside className="w-64 bg-muted sticky top-[74px] self-start h-[700px] border-r border-border bg-[linear-gradient(to_bottom,#000,#14166C)]">
         <div className="p-4 space-y-2">
-          {savedPitches.map((pitch, index) => (
+          {folders.map((folder) => (
             <div
-              key={index}
+              key={folder.id}
               className={`group w-full flex items-center justify-between px-4 py-3 rounded-md transition-colors cursor-pointer ${
-                index === 0
+                selectedFolderId === folder.id
                   ? "bg-secondary text-foreground"
                   : "text-muted-foreground hover:bg-secondary"
               }`}
+              onClick={() => setSelectedFolderId(folder.id)}
             >
-              <span className="truncate">{pitch}</span>
-              <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-secondary rounded">
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
+              <span className="truncate">{folder.name}</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-secondary rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRenameFolder(folder.id);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteFolder(folder.id);
+                    }}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           ))}
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-secondary"
+            onClick={() => setShowCreateDialog(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Folder
+          </Button>
         </div>
       </aside>
 
@@ -179,7 +322,9 @@ export const PitchBuilder = () => {
         <div className="">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h1 className="text-4xl font-medium text-foreground font-dm">Stranger Things</h1>
+              <h1 className="text-4xl font-medium text-foreground font-dm">
+                {selectedFolderId ? getFolderById(selectedFolderId)?.name || "Select a folder" : "Select a folder"}
+              </h1>
               <Badge variant="outline" className="border-border text-foreground px-4 py-1 text-sm flex items-center gap-1">
                 <Paperclip className="h-3 w-3" />
                 Brief
@@ -213,37 +358,47 @@ export const PitchBuilder = () => {
           ) : recommendedSongs.length > 0 ? (
             <div className="space-y-3 z-1">
               {recommendedSongs.map((song) => (
-              <div
-                key={song.id}
-                className="bg-card border border-border rounded-lg p-4 hover:bg-hover-row transition-colors"
-              >
-                {/* Top Row */}
-                <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-2xl">{song.thumbnail}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <span className="text-foreground font-medium">{song.title}</span>
-                      <span className="text-muted-foreground italic">{song.artist}</span>
-                      <span className="text-foreground">{song.album}</span>
-                      <div className="flex gap-2 ml-auto">
-                        {song.keywords.map((keyword, idx) => (
-                          <Badge key={idx} className="bg-secondary/50 text-foreground border-0">
-                            {keyword}
-                          </Badge>
-                        ))}
-                        <span className="text-foreground ml-4">{song.duration}</span>
+              <ContextMenu key={song.id}>
+                <ContextMenuTrigger asChild>
+                  <div className="bg-card border border-border rounded-lg p-4 hover:bg-hover-row transition-colors cursor-context-menu">
+                    {/* Top Row */}
+                    <div className="flex items-center gap-4 mb-3">
+                    <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-2xl">{song.thumbnail}</div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className="text-foreground font-medium">{song.title}</span>
+                          <span className="text-muted-foreground italic">{song.artist}</span>
+                          <span className="text-foreground">{song.album}</span>
+                          <div className="flex gap-2 ml-auto">
+                            {song.keywords.map((keyword, idx) => (
+                              <Badge key={idx} className="bg-secondary/50 text-foreground border-0">
+                                {keyword}
+                              </Badge>
+                            ))}
+                            <span className="text-foreground ml-4">{song.duration}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Bottom Row */}
-                <div className="flex items-center gap-8 ml-16 text-sm">
-                  <span className="text-foreground">{song.producer}</span>
-                  <span className="text-muted-foreground italic">{song.writer}</span>
-                  <span className="text-foreground">{song.licensing}</span>
-                </div>
-              </div>
+                    {/* Bottom Row */}
+                    <div className="flex items-center gap-8 ml-16 text-sm">
+                      <span className="text-foreground">{song.producer}</span>
+                      <span className="text-muted-foreground italic">{song.writer}</span>
+                      <span className="text-foreground">{song.licensing}</span>
+                    </div>
+                  </div>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem
+                    onClick={() => handleRemoveTrackFromFolder(song.id)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete from folder
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             ))}
             </div>
           ) : (
@@ -263,17 +418,71 @@ export const PitchBuilder = () => {
           >
             Export
           </Button>
-          <Button 
-            size="lg" 
-            variant="outline" 
-            className="border-destructive text-destructive hover:bg-destructive/10 font-medium px-8"
-          >
-            Save
-          </Button>
         </div>
       </main>
     </div>
-    <MusicPlayer />
+
+    {/* Create Folder Dialog */}
+    <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create New Folder</DialogTitle>
+          <DialogDescription>
+            Enter a name for your new pitch folder.
+          </DialogDescription>
+        </DialogHeader>
+        <Input
+          placeholder="Folder name"
+          value={newFolderName}
+          onChange={(e) => setNewFolderName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleCreateFolder();
+            }
+          }}
+          autoFocus
+        />
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+            Create
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Rename Folder Dialog */}
+    <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Rename Folder</DialogTitle>
+          <DialogDescription>
+            Enter a new name for this folder.
+          </DialogDescription>
+        </DialogHeader>
+        <Input
+          placeholder="Folder name"
+          value={renameFolderName}
+          onChange={(e) => setRenameFolderName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSaveRename();
+            }
+          }}
+          autoFocus
+        />
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSaveRename} disabled={!renameFolderName.trim()}>
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </>
   );
 };

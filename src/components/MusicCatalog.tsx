@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
-import { Play, Plus, MoreHorizontal, Loader2 } from "lucide-react";
+import { Play, Plus, MoreHorizontal, Loader2, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription 
+} from "@/components/ui/dialog";
 import API_ENDPOINTS from "@/config/api";
+import { getFolders, addTracksToFolder, type Folder } from "@/services/folderService";
 
 interface Song {
   id: number;
@@ -364,6 +373,9 @@ export const MusicCatalog = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<Set<number>>(new Set());
+  const [showFolderDialog, setShowFolderDialog] = useState(false);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const pageSize = 30; // Show 30 songs per page in the catalog
 
   // Load songs from MongoDB backend API with pagination
@@ -428,7 +440,37 @@ export const MusicCatalog = () => {
 
   useEffect(() => {
     loadSongs(1, false);
+    // Load folders
+    setFolders(getFolders());
   }, []);
+
+  const toggleTrackSelection = (songId: number) => {
+    setSelectedTrackIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(songId)) {
+        newSet.delete(songId);
+      } else {
+        newSet.add(songId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSaveToFolder = () => {
+    if (selectedTrackIds.size === 0) {
+      return;
+    }
+    setShowFolderDialog(true);
+  };
+
+  const saveTracksToFolder = (folderId: string) => {
+    const trackIdsToSave = Array.from(selectedTrackIds).map(id => id.toString());
+    addTracksToFolder(folderId, trackIdsToSave);
+    setShowFolderDialog(false);
+    setSelectedTrackIds(new Set());
+    // Show success feedback (could use a toast here)
+    alert(`Saved ${trackIdsToSave.length} track(s) to folder`);
+  };
 
   const handlePageChange = (page: number) => {
     if (page === currentPage || page < 1 || page > totalPages || isLoading) {
@@ -478,25 +520,45 @@ export const MusicCatalog = () => {
         </div>
       ) : (
         <>
+          {/* Save Button */}
+          {selectedTrackIds.size > 0 && (
+            <div className="sticky top-0 z-20 px-6 py-3 bg-card/90 backdrop-blur border-b border-border">
+              <Button
+                onClick={handleSaveToFolder}
+                className="bg-[#E4EA04] hover:bg-[#B5C929] text-black font-medium"
+              >
+                Save {selectedTrackIds.size} track{selectedTrackIds.size > 1 ? 's' : ''} to Folder
+              </Button>
+            </div>
+          )}
+          
           {/* Table Header */}
-          <div className="sticky top-0 z-10 grid grid-cols-[40px_60px_1fr_200px_120px_120px_120px_80px] gap-4 px-6 py-3 border-b border-border text-sm text-muted-foreground font-medium bg-card/90 backdrop-blur">
-        <div>#</div>
-        <div></div>
-        <div>Title</div>
-        <div className="justify-self-center">Album</div>
-        <div className="justify-self-center">Genre</div>
-        <div className="justify-self-center">Mood</div>
-        <div className="justify-self-center">Licensing</div>
-        <div className="text-right">Duration</div>
-      </div>
+          <div className="sticky top-0 z-10 grid grid-cols-[40px_40px_60px_1fr_200px_120px_120px_120px_80px] gap-4 px-6 py-3 border-b border-border text-sm text-muted-foreground font-medium bg-card/90 backdrop-blur">
+            <div></div>
+            <div>#</div>
+            <div></div>
+            <div>Title</div>
+            <div className="justify-self-center">Album</div>
+            <div className="justify-self-center">Genre</div>
+            <div className="justify-self-center">Mood</div>
+            <div className="justify-self-center">Licensing</div>
+            <div className="text-right">Duration</div>
+          </div>
 
       {/* Song List */}
       <div className="divide-y divide-border/50">
         {songs.map((song, index) => (
           <div
             key={song.id}
-            className="grid grid-cols-[40px_60px_1fr_200px_120px_120px_120px_80px] gap-4 px-6 py-3 hover:bg-hover-row transition-colors duration-150 group cursor-pointer items-center"
+            className="grid grid-cols-[40px_40px_60px_1fr_200px_120px_120px_120px_80px] gap-4 px-6 py-3 hover:bg-hover-row transition-colors duration-150 group cursor-pointer items-center"
           >
+            {/* Checkbox */}
+            <div onClick={(e) => e.stopPropagation()}>
+              <Checkbox
+                checked={selectedTrackIds.has(song.id)}
+                onCheckedChange={() => toggleTrackSelection(song.id)}
+              />
+            </div>
             {/* Number / Play Button */}
             <div className="text-muted-foreground text-sm">
               <span className="group-hover:hidden">{(currentPage - 1) * pageSize + index + 1}</span>
@@ -596,6 +658,42 @@ export const MusicCatalog = () => {
       </div>
         </>
       )}
+
+      {/* Folder Selection Dialog */}
+      <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Tracks to Folder</DialogTitle>
+            <DialogDescription>
+              Select a folder to save {selectedTrackIds.size} track{selectedTrackIds.size > 1 ? 's' : ''} to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {folders.map((folder) => (
+              <button
+                key={folder.id}
+                onClick={() => saveTracksToFolder(folder.id)}
+                className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-transparent hover:border-purple-200 hover:bg-purple-50/10 transition-all duration-200 text-left group"
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                  {folder.name.charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-lg">{folder.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {folder.trackIds.length} track{folder.trackIds.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="w-8 h-8 bg-[#E4EA04] rounded-full flex items-center justify-center">
+                    <Check className="h-4 w-4 text-black" />
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
