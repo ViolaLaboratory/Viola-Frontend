@@ -675,19 +675,19 @@ const Landing = () => {
               <ul className="space-y-3 text-white/80 text-base">
                 <li className="flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
-                  <span>Music supervisor</span>
+                  <span>Music Supervisor</span>
                 </li>
                 <li className="flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
-                  <span>Sync / licensing director</span>
+                  <span>Sync Licensing Manager</span>
                 </li>
                 <li className="flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
-                  <span>Trailer or games music editor</span>
+                  <span>Sync Agency Owner</span>
                 </li>
                 <li className="flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
-                  <span>Agency producer or editor</span>
+                  <span>Record Label or Publishing Company Team </span>
                 </li>
               </ul>
             </div>
