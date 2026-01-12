@@ -76,9 +76,6 @@ const Landing = () => {
   const backgroundRef = useRef<HTMLDivElement>(null);
   const [backgroundTransform, setBackgroundTransform] = useState({ x: 0, y: 0 });
 
-  // Canvas spotlight effect in "Who It's For" section
-  const [canvasSpotlight, setCanvasSpotlight] = useState({ x: 50, y: 50 });
-
   // Intersection observer for "With Viola" card flicker animation
   const withViolaRef = useRef<HTMLDivElement>(null);
   const [withViolaVisible, setWithViolaVisible] = useState(false);
@@ -144,24 +141,6 @@ const Landing = () => {
    */
   const handleBackgroundMouseLeave = () => {
     setBackgroundTransform({ x: 0, y: 0 });
-  };
-
-  /**
-   * Tracks mouse position over the canvas image in "Who It's For" section
-   * Creates a spotlight reveal effect following the cursor
-   */
-  const handleCanvasMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-    const xPct = ((e.clientX - rect.left) / rect.width) * 100;
-    const yPct = ((e.clientY - rect.top) / rect.height) * 100;
-    setCanvasSpotlight({ x: xPct, y: yPct });
-  };
-
-  /**
-   * Resets canvas spotlight to center when mouse leaves
-   */
-  const handleCanvasMouseLeave = () => {
-    setCanvasSpotlight({ x: 50, y: 50 });
   };
 
   /**
@@ -685,57 +664,50 @@ const Landing = () => {
       <section className="px-4 sm:px-6 py-16 md:py-20">
         <div className="max-w-6xl mx-auto space-y-10">
           <div className="text-center">
-            <p className="uppercase tracking-[0.2em] text-white font-dm text-xs mb-3">CLEAR THE NOISE: Who It’s For</p>
-            <h2 className="text-3xl md:text-4xl font-zen font-semibold text-white">Built for people whose job is taste.</h2>
+            <p className="uppercase tracking-[0.2em] text-white font-dm text-xs mb-3">CLEAR THE NOISE: Who It's For</p>
+            <h2 className="text-3xl md:text-4xl font-zen font-semibold text-white">Built For People Who Have Musical Taste</h2>
           </div>
 
-          <div
-            className="relative w-full max-w-5xl mx-auto"
-            onMouseMove={handleCanvasMouseMove}
-            onMouseLeave={handleCanvasMouseLeave}
-          >
-            <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-white/10 via-[#e4ea04]/10 to-white/5 blur-xl"></div>
-            <div className="relative rounded-[32px] border border-white/15 bg-black/70 overflow-hidden shadow-[0_40px_120px_rgba(0,0,0,0.55),0_0_35px_rgba(228,234,4,0.18)]">
-              <img
-                src="/canvas.png"
-                alt="Viola canvas blurred"
-                className="w-full h-full object-cover min-h-[360px] md:min-h-[480px] lg:min-h-[560px] blur-[12px] scale-[1.04]"
-              />
-              <img
-                src="/canvas.png"
-                alt="Viola canvas"
-                className="absolute inset-0 w-full h-full object-cover min-h-[360px] md:min-h-[480px] lg:min-h-[560px]"
-                style={{
-                  maskImage: `radial-gradient(260px 180px at ${canvasSpotlight.x}% ${canvasSpotlight.y}%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 80%)`,
-                  WebkitMaskImage: `radial-gradient(260px 180px at ${canvasSpotlight.x}% ${canvasSpotlight.y}%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 80%)`
-                }}
-              />
-              <div className="pointer-events-none invisible sm:visible absolute inset-4 flex items-center justify-center font-bold">
-                <span className="absolute top-4 left-1/2 -translate-x-1/2 text-[11px] sm:text-xs tracking-[0.35em] uppercase text-white/80">For the people</span>
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-[11px] sm:text-xs tracking-[0.35em] uppercase text-white/80">who pick the song</span>
-                <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rotate-180 text-[11px] sm:text-xs tracking-[0.35em] uppercase text-white/80">that makes</span>
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 -rotate-90 text-[11px] sm:text-xs tracking-[0.35em] uppercase text-white/80">the scene.</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-            <div className="p-5 md:p-6 space-y-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)] text-center">
-              <p className="text-white text-sm uppercase tracking-[0.15em] font-zen">Perfect if you are a</p>
-              <ul className="space-y-2 text-white/50">
-                <li>Music supervisor</li>
-                <li>Sync / licensing director</li>
-                <li>Trailer or games music editor</li>
-                <li>Agency producer or editor</li>
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+            <div className="relative p-8 md:p-10 space-y-4 rounded-2xl border-2 border-[#e4ea04]/40 bg-gradient-to-br from-[#e4ea04]/10 via-black/60 to-black/80 backdrop-blur-sm text-center shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_30px_rgba(228,234,4,0.15)] hover:border-[#e4ea04]/60 transition-all duration-300">
+              <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#e4ea04] shadow-[0_0_10px_rgba(228,234,4,0.8)]"></div>
+              <p className="text-[#e4ea04] text-sm uppercase tracking-[0.15em] font-zen font-semibold">Perfect if you are a</p>
+              <ul className="space-y-3 text-white/80 text-base">
+                <li className="flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
+                  <span>Music supervisor</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
+                  <span>Sync / licensing director</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
+                  <span>Trailer or games music editor</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
+                  <span>Agency producer or editor</span>
+                </li>
               </ul>
             </div>
 
-            <div className="p-5 md:p-6 space-y-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)] text-center">
-              <p className="text-white text-sm uppercase tracking-[0.15em] font-zen">And you’re tired of</p>
-              <ul className="space-y-2 text-white/50">
-                <li>Digging through clunky library interfaces</li>
-                <li>Chasing rights info across spreadsheets</li>
-                <li>Losing half a day to every temp track swap</li>
+            <div className="relative p-8 md:p-10 space-y-4 rounded-2xl border-2 border-[#ee481f]/40 bg-gradient-to-br from-[#ee481f]/10 via-black/60 to-black/80 backdrop-blur-sm text-center shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_30px_rgba(238,72,31,0.15)] hover:border-[#ee481f]/60 transition-all duration-300">
+              <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#ee481f] shadow-[0_0_10px_rgba(238,72,31,0.8)]"></div>
+              <p className="text-[#ee481f] text-sm uppercase tracking-[0.15em] font-zen font-semibold">And you're tired of</p>
+              <ul className="space-y-3 text-white/80 text-base">
+                <li className="flex items-center justify-center gap-2">
+                  <X className="w-4 h-4 text-[#ee481f]" />
+                  <span>Digging through clunky library interfaces</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <X className="w-4 h-4 text-[#ee481f]" />
+                  <span>Chasing rights info across spreadsheets</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <X className="w-4 h-4 text-[#ee481f]" />
+                  <span>Losing half a day to every temp track swap</span>
+                </li>
               </ul>
             </div>
           </div>
