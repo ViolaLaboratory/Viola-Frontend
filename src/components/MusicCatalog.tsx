@@ -1,17 +1,7 @@
-import { useState, useEffect } from "react";
-import { Play, Plus, MoreHorizontal, Loader2, Check } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect, useCallback } from "react";
+import { ArrowUp, Play, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription 
-} from "@/components/ui/dialog";
 import API_ENDPOINTS from "@/config/api";
-import { getFolders, addTracksToFolder, type Folder } from "@/services/folderService";
 
 interface Song {
   id: number;
@@ -24,6 +14,25 @@ interface Song {
   duration: string;
   thumbnail: string;
   views?: string;
+}
+
+interface BackendTrack {
+  id?: number | string;
+  title?: string;
+  artist?: string;
+  album?: string;
+  genre?: string;
+  mood?: string;
+  licensing?: string;
+  duration?: string;
+  thumbnail?: string;
+}
+
+interface CatalogResponse {
+  results?: BackendTrack[];
+  pagination?: {
+    total_pages?: number;
+  };
 }
 
 // Default/fallback songs
@@ -373,13 +382,10 @@ export const MusicCatalog = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedTrackIds, setSelectedTrackIds] = useState<Set<number>>(new Set());
-  const [showFolderDialog, setShowFolderDialog] = useState(false);
-  const [folders, setFolders] = useState<Folder[]>([]);
   const pageSize = 30; // Show 30 songs per page in the catalog
 
   // Load songs from MongoDB backend API with pagination
-  const loadSongsFromBackend = async (page: number = 1) => {
+  const loadSongsFromBackend = useCallback(async (page: number = 1) => {
     try {
       const response = await fetch(API_ENDPOINTS.SONGS_LIST(page, pageSize));
       
@@ -387,11 +393,11 @@ export const MusicCatalog = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data = await response.json();
-      const fetchedTracks = data.results || [];
-      const pagination = data.pagination || {};
+      const data: CatalogResponse = await response.json();
+      const fetchedTracks = data.results ?? [];
+      const pagination = data.pagination ?? {};
 
-      const catalogSongs: Song[] = fetchedTracks.map((track: any) => {
+      const catalogSongs: Song[] = fetchedTracks.map((track) => {
         const songId = track.id || "0";
         const songIdNum =
           typeof songId === "string" ? parseInt(songId) || 0 : songId;
@@ -421,9 +427,9 @@ export const MusicCatalog = () => {
       console.error('Error loading from backend:', error);
       return false;
     }
-  };
+  }, [pageSize]);
 
-  const loadSongs = async (page: number = 1, append: boolean = false) => {
+  const loadSongs = useCallback(async (page: number = 1, append: boolean = false) => {
     setIsLoading(true);
     setError(null);
     
@@ -436,41 +442,11 @@ export const MusicCatalog = () => {
     }
     
     setIsLoading(false);
-  };
+  }, [loadSongsFromBackend]);
 
   useEffect(() => {
     loadSongs(1, false);
-    // Load folders
-    setFolders(getFolders());
-  }, []);
-
-  const toggleTrackSelection = (songId: number) => {
-    setSelectedTrackIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(songId)) {
-        newSet.delete(songId);
-      } else {
-        newSet.add(songId);
-      }
-      return newSet;
-    });
-  };
-
-  const handleSaveToFolder = () => {
-    if (selectedTrackIds.size === 0) {
-      return;
-    }
-    setShowFolderDialog(true);
-  };
-
-  const saveTracksToFolder = (folderId: string) => {
-    const trackIdsToSave = Array.from(selectedTrackIds).map(id => id.toString());
-    addTracksToFolder(folderId, trackIdsToSave);
-    setShowFolderDialog(false);
-    setSelectedTrackIds(new Set());
-    // Show success feedback (could use a toast here)
-    alert(`Saved ${trackIdsToSave.length} track(s) to folder`);
-  };
+  }, [loadSongs]);
 
   const handlePageChange = (page: number) => {
     if (page === currentPage || page < 1 || page > totalPages || isLoading) {
@@ -483,7 +459,7 @@ export const MusicCatalog = () => {
   const getPageNumbers = () => {
     const maxVisible = 7;
     let start = Math.max(1, currentPage - 3);
-    let end = Math.min(totalPages, start + maxVisible - 1);
+    const end = Math.min(totalPages, start + maxVisible - 1);
 
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1);
@@ -497,203 +473,165 @@ export const MusicCatalog = () => {
   };
 
   return (
-    <div className="bg-black w-full max-h-[calc(100vh-140px)] min-h-[60vh] overflow-y-auto rounded-xl border border-border bg-card/60 mt-6">
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="ml-3 text-muted-foreground">Loading catalog from MongoDB...</p>
+    <section className="w-full min-h-screen text-white font-exo">
+      <div className="min-h-screen w-full px-10 py-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-dm">Your Catalog</h1>
         </div>
-      ) : error ? (
-        <div className="flex flex-col items-center justify-center py-12 px-6">
-          <p className="text-red-400 mb-4 text-center">{error}</p>
-          <Button
-            onClick={() => loadSongs(1, false)}
-            variant="outline"
-            className="bg-transparent border-white/20 text-white hover:bg-white/10"
-          >
-            Retry
-          </Button>
-        </div>
-      ) : songs.length === 0 ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">No songs found.</p>
-        </div>
-      ) : (
-        <>
-          {/* Save Button */}
-          {selectedTrackIds.size > 0 && (
-            <div className="sticky top-0 z-20 px-6 py-3 bg-card/90 backdrop-blur border-b border-border">
-              <Button
-                onClick={handleSaveToFolder}
-                className="bg-[#E4EA04] hover:bg-[#B5C929] text-black font-medium"
-              >
-                Save {selectedTrackIds.size} track{selectedTrackIds.size > 1 ? 's' : ''} to Folder
-              </Button>
-            </div>
-          )}
-          
-          {/* Table Header */}
-          <div className="sticky top-0 z-10 grid grid-cols-[40px_40px_60px_1fr_200px_120px_120px_120px_80px] gap-4 px-6 py-3 border-b border-border text-sm text-muted-foreground font-medium bg-card/90 backdrop-blur">
-            <div></div>
-            <div>#</div>
-            <div></div>
-            <div>Title</div>
-            <div className="justify-self-center">Album</div>
-            <div className="justify-self-center">Genre</div>
-            <div className="justify-self-center">Mood</div>
-            <div className="justify-self-center">Licensing</div>
-            <div className="text-right">Duration</div>
-          </div>
 
-      {/* Song List */}
-      <div className="divide-y divide-border/50">
-        {songs.map((song, index) => (
-          <div
-            key={song.id}
-            className="grid grid-cols-[40px_40px_60px_1fr_200px_120px_120px_120px_80px] gap-4 px-6 py-3 hover:bg-hover-row transition-colors duration-150 group cursor-pointer items-center"
-          >
-            {/* Checkbox */}
-            <div onClick={(e) => e.stopPropagation()}>
-              <Checkbox
-                checked={selectedTrackIds.has(song.id)}
-                onCheckedChange={() => toggleTrackSelection(song.id)}
-              />
+        <div className="mt-6 rounded-[28px] border border-white/20 bg-black/40 backdrop-blur-[26px] p-6 shadow-[0_0_28px_rgba(0,0,0,0.35)]">
+          <div className="flex items-center justify-between gap-6 rounded-full border border-white/30 bg-black/40 px-6 py-3 shadow-[inset_0_0_24px_rgba(255,255,255,0.08)]">
+            <div className="flex items-center gap-4 text-white/70">
+              <img src="/flower.png" alt="Search" className="h-5 w-5" />
+              <span className="text-sm">Your next song is found when you type...</span>
             </div>
-            {/* Number / Play Button */}
-            <div className="text-muted-foreground text-sm">
-              <span className="group-hover:hidden">{(currentPage - 1) * pageSize + index + 1}</span>
-              <Play className="hidden group-hover:block w-4 h-4 text-foreground" />
-            </div>
-
-            {/* Thumbnail */}
-            <div className="w-12 h-12 bg-secondary rounded flex items-center justify-center text-2xl">
-              {song.thumbnail}
-            </div>
-
-            {/* Title & Artist */}
-            <div className="flex flex-col overflow-hidden">
-              <span className="text-foreground font-medium truncate">{song.title}</span>
-              <span className="text-muted-foreground text-sm truncate">{song.artist}</span>
-            </div>
-
-            {/* Album */}
-            <div className="text-foreground text-center text-sm truncate">{song.album}</div>
-
-            {/* Genre Badge */}
-            <div className="flex justify-self-center">
-              <Badge variant="secondary" className="bg-badge-genre/20 text-badge-genre border-0 hover:bg-badge-genre/30">
-                {song.genre}
-              </Badge>
-            </div>
-
-            {/* Mood Badge */}
-            <div className="flex justify-self-center">
-              <Badge variant="secondary" className="bg-badge-mood/20 text-badge-mood border-0 hover:bg-badge-mood/30">
-                {song.mood}
-              </Badge>
-            </div>
-
-            {/* Licensing Badge */}
-            <div className="flex justify-self-center">
-              <Badge variant="secondary" className="bg-badge-licensing/20 text-badge-licensing border-0 hover:bg-badge-licensing/30">
-                {song.licensing}
-              </Badge>
-            </div>
-
-            {/* Duration & Actions */}
-            <div className="flex items-center justify-end gap-2">
-              <span className="text-muted-foreground text-sm">{song.duration}</span>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Plus className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      {/* Pagination */}
-      <div className="flex items-center justify-between px-6 py-4 border-t border-border text-sm text-muted-foreground">
-        <span>
-          Page {currentPage} of {totalPages} • Showing {songs.length} songs per page
-        </span>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 rounded-full bg-transparent border-white/20 text-white hover:bg-white/10 disabled:opacity-40"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1 || isLoading}
-          >
-            ‹
-          </Button>
-          {getPageNumbers().map((page) => (
-            <Button
-              key={page}
-              variant={page === currentPage ? "default" : "outline"}
-              size="sm"
-              className={`h-8 w-8 rounded-full px-0 ${
-                page === currentPage
-                  ? "bg-[#E74C3C] text-white border-transparent"
-                  : "bg-transparent border-white/20 text-white hover:bg-white/10"
-              }`}
-              onClick={() => handlePageChange(page)}
-              disabled={isLoading}
+            <button
+              type="button"
+              className="h-10 w-10 rounded-full bg-white text-black flex items-center justify-center"
             >
-              {page}
-            </Button>
-          ))}
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 rounded-full bg-transparent border-white/20 text-white hover:bg-white/10 disabled:opacity-40"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages || isLoading}
-          >
-            ›
-          </Button>
+              <ArrowUp className="h-4 w-4" />
+            </button>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16 text-white/70">
+              <Loader2 className="h-8 w-8 animate-spin text-white/70" />
+              <p className="ml-3">Loading catalog from MongoDB...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-16 px-6">
+              <p className="text-red-300 mb-4 text-center">{error}</p>
+              <Button
+                onClick={() => loadSongs(1, false)}
+                variant="outline"
+                className="bg-transparent border-white/30 text-white hover:bg-white/10"
+              >
+                Retry
+              </Button>
+            </div>
+          ) : songs.length === 0 ? (
+            <div className="flex items-center justify-center py-16">
+              <p className="text-white/60">No songs found.</p>
+            </div>
+          ) : (
+            <>
+              <div className="mt-8 grid grid-cols-[60px_90px_1fr_1fr_1fr_140px_140px_120px_120px] gap-4 px-2 text-sm text-white/70 font-dm">
+                <div>#</div>
+                <div></div>
+                <div>Title</div>
+                <div>Artist</div>
+                <div>Album</div>
+                <div className="text-center">Genre</div>
+                <div className="text-center">Mood</div>
+                <div className="text-center">Duration</div>
+                <div className="text-center">Details</div>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {songs.map((song, index) => (
+                  <div
+                    key={song.id}
+                    className="grid grid-cols-[60px_90px_1fr_1fr_1fr_140px_140px_120px_120px] gap-4 items-center rounded-xl border border-white/20 bg-black/40 px-4 py-3 shadow-[0_0_22px_rgba(0,0,0,0.35)]"
+                  >
+                    <div className="text-white/80 font-dm">
+                      {(currentPage - 1) * pageSize + index + 1}
+                    </div>
+                    <div className="h-12 w-12 rounded bg-white/10 flex items-center justify-center">
+                      {song.thumbnail}
+                    </div>
+                    <div className="text-white">{song.title}</div>
+                    <div className="text-white/80">{song.artist}</div>
+                    <div className="text-white/80">{song.album}</div>
+                    <div className="text-center text-white/80">{song.genre}</div>
+                    <div className="text-center text-white/80">{song.mood}</div>
+                    <div className="text-center text-white/80 font-dm">{song.duration}</div>
+                    <div className="flex items-center justify-center gap-3 text-sm text-white/70">
+                      <span>See more...</span>
+                      <button
+                        type="button"
+                        className="h-6 w-6 rounded-full bg-white text-black flex items-center justify-center"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-4 text-sm text-white/60">
+                <span>
+                  Page {currentPage} of {totalPages} • Showing {songs.length} songs per page
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full bg-transparent border-white/20 text-white hover:bg-white/10 disabled:opacity-40"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1 || isLoading}
+                  >
+                    ‹
+                  </Button>
+                  {getPageNumbers().map((page) => (
+                    <Button
+                      key={page}
+                      variant={page === currentPage ? "default" : "outline"}
+                      size="sm"
+                      className={`h-8 w-8 rounded-full px-0 ${
+                        page === currentPage
+                          ? "bg-white text-black border-transparent"
+                          : "bg-transparent border-white/20 text-white hover:bg-white/10"
+                      }`}
+                      onClick={() => handlePageChange(page)}
+                      disabled={isLoading}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full bg-transparent border-white/20 text-white hover:bg-white/10 disabled:opacity-40"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages || isLoading}
+                  >
+                    ›
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-xl border border-white/15 bg-black/50 px-6 py-3 shadow-[0_0_18px_rgba(0,0,0,0.35)]">
+                <div className="flex items-center justify-between gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded bg-white/10 flex items-center justify-center">
+                      🎵
+                    </div>
+                    <div>
+                      <div className="text-white">Song Title</div>
+                      <div className="text-white/60 text-sm">Artist Name</div>
+                      <div className="text-white/60 text-sm">Album Name</div>
+                    </div>
+                  </div>
+                  <div className="flex-1 px-6">
+                    <div className="relative h-[3px] bg-white/20 rounded-full">
+                      <div className="absolute left-0 top-0 h-full w-[35%] bg-white rounded-full" />
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-white/60 mt-2 font-dm">
+                      <span>00:00</span>
+                      <span>2:37</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button type="button" className="h-9 w-9 rounded-full border border-white/40">
+                      <Play className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
-        </>
-      )}
-
-      {/* Folder Selection Dialog */}
-      <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Save Tracks to Folder</DialogTitle>
-            <DialogDescription>
-              Select a folder to save {selectedTrackIds.size} track{selectedTrackIds.size > 1 ? 's' : ''} to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 max-h-[400px] overflow-y-auto">
-            {folders.map((folder) => (
-              <button
-                key={folder.id}
-                onClick={() => saveTracksToFolder(folder.id)}
-                className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-transparent hover:border-purple-200 hover:bg-purple-50/10 transition-all duration-200 text-left group"
-              >
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                  {folder.name.charAt(0)}
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-lg">{folder.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {folder.trackIds.length} track{folder.trackIds.length !== 1 ? 's' : ''}
-                  </div>
-                </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <div className="w-8 h-8 bg-[#E4EA04] rounded-full flex items-center justify-center">
-                    <Check className="h-4 w-4 text-black" />
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+    </section>
   );
 };
