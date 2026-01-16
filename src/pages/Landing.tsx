@@ -76,9 +76,6 @@ const Landing = () => {
   const backgroundRef = useRef<HTMLDivElement>(null);
   const [backgroundTransform, setBackgroundTransform] = useState({ x: 0, y: 0 });
 
-  // Canvas spotlight effect in "Who It's For" section
-  const [canvasSpotlight, setCanvasSpotlight] = useState({ x: 50, y: 50 });
-
   // Intersection observer for "With Viola" card flicker animation
   const withViolaRef = useRef<HTMLDivElement>(null);
   const [withViolaVisible, setWithViolaVisible] = useState(false);
@@ -144,24 +141,6 @@ const Landing = () => {
    */
   const handleBackgroundMouseLeave = () => {
     setBackgroundTransform({ x: 0, y: 0 });
-  };
-
-  /**
-   * Tracks mouse position over the canvas image in "Who It's For" section
-   * Creates a spotlight reveal effect following the cursor
-   */
-  const handleCanvasMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-    const xPct = ((e.clientX - rect.left) / rect.width) * 100;
-    const yPct = ((e.clientY - rect.top) / rect.height) * 100;
-    setCanvasSpotlight({ x: xPct, y: yPct });
-  };
-
-  /**
-   * Resets canvas spotlight to center when mouse leaves
-   */
-  const handleCanvasMouseLeave = () => {
-    setCanvasSpotlight({ x: 50, y: 50 });
   };
 
   /**
@@ -301,11 +280,11 @@ const Landing = () => {
 
         <div className="text-center font-dm max-w-6xl mx-auto relative z-10 space-y-8">
           <h1 className="font-[500] font-zen drop-shadow-[0px_0px_3px_rgba(255,255,255,1)] text-4xl sm:text-6xl lg:text-7xl font-[500] tracking-tight opacity-0 animate-fade-in-up [animation-delay:400ms]">
-            from brief to cleared <br></br>track &lt; 30 minutes.
+            Pitch Your Catalog Efficiently and Effortlessly
           </h1>
 
           <p className="text-md md:text-xl max-w-3xl text-white/70 mx-auto opacity-0 animate-fade-in-up [animation-delay:600ms]">
-          Viola is an AI music workspace for sync teams and tastemakers. Find, shortlist, and clear the right track without losing your day or your sanity.
+          Viola is an AI music workspace for sync teams and the creative tastemakers. Locate, Shortlist, and Clear the right tracks without losing your day and sanity.
           </p>
 
           <div className="cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-4 opacity-0 animate-fade-in-up [animation-delay:800ms]">
@@ -410,16 +389,16 @@ const Landing = () => {
                 </h2>
                 <div className="text-white/90 space-y-4 md:space-y-2">
                   <p className="text-base md:text-lg">
-                    If you work in sync, you already know the drill
+                    If you work in sync or as a creative, you already know the inefficiencies of pitching tracks
                   </p>
 
                   <ul className="list-disc pl-5 md:pl-6 space-y-1 md:space-y-2 lg:space-y-5">
-                    <li className="text-sm md:text-base lg:text-lg">3–4 hours of manual searching for every placement</li>
+                    <li className="text-sm md:text-base lg:text-lg">3–4 hours of manual searching and sifting tracks for every placement</li>
                     <li className="text-sm md:text-base lg:text-lg">
-                    Endless scrolling and half-listening to find “the one”
+                    Endless scrolling and listening to find the perfect track
                     </li>
                     <li className="text-sm md:text-base lg:text-lg">
-                    Messy email chains and spreadsheets for every license
+                    Unorganized communication for every license negotiated
                     </li>
                   </ul>
 
@@ -468,15 +447,12 @@ const Landing = () => {
           <div className="relative z-10 px-6 md:px-12 py-12 md:py-16 lg:py-20 text-center space-y-3 md:space-y-4">
             <p className="uppercase tracking-[0.25em] text-xs">Locate · Listen · License</p>
             <h2 className="font-zen font-semibold text-3xl md:text-4xl lg:text-5xl leading-tight max-w-5xl mx-auto">
-              From <span className="italic">“I'll Know It When I Hear It”</span>
+              From <span className="italic">"I'll Know It When I Hear It"</span>
               <br className="hidden md:block" />
-              <span className="md:inline block mt-2 md:mt-0 font-dm">to Pitched. One Place.</span>
+              <span className="md:inline block mt-2 md:mt-0 font-dm">to Easily Pitched.</span>
+              <br className="hidden md:block" />
+              <span className="md:inline block mt-2 md:mt-0 font-dm">All Done in One Place.</span>
             </h2>
-            <p className="text-sm md:text-base max-w-3xl mx-auto">
-            Viola auto-tags your catalog and lets you search it the way you talk. Drag your songs in once, and our AI adds rich metadata in the background. Then type briefs in natural language and the catalog reorders itself from best fit to worst fit.
-
-            One workspace to locate, listen, and license.
-            </p>
           </div>
         </div>
       </section>
@@ -519,11 +495,11 @@ const Landing = () => {
                 <span className="text-sm font-medium">AI Search</span>
               </div>
               <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
-                Find the perfect track in seconds
+                Find the Perfect Track in Seconds
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
-              Type what you’d say in the spotting session: “dark and eerie song while the lead girl and boy are chased in the woods, subtle vocal, 130 bpm, no explicit lyrics.” 
-              Viola understands mood, genre, tempo, lyrics, and story context. No more blind keyword guessing or endless scroll. Just say what you need, and Viola pulls the tracks that actually feel right.            </p>
+              Type what you would say in your natural language: "dark and eerie songs where the lead girl and boy are being chased in the woods, subtle vocal, 130 bpm, no explicit lyrics." Viola understands the mood, genre, tempo, reference, and story context. No more blind metadata  keyword filtering and guessing, or endless scroll. Just say what you need, and Viola pulls the right tracks that actually feels right to you.
+              </p>
             </div>
           </div>
         </section>
@@ -565,12 +541,10 @@ const Landing = () => {
                 <span className="text-sm font-medium">Pitch Kit Builder</span>
               </div>
               <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
-                Curate with confidence
+                Curate with Confidence
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
-              Build ready-to-send pitch kits in a few clicks. Viola pulls in metadata, art, and 
-              links for every track automatically, 
-              so your decks and folders are clean, consistent, and synced to the catalog.
+              Build ready-to-send pitch kits in a few clicks. Viola pulls in metadata, covert art, licensing information, and audio files for every track automatically to ensure that organization is clean, consistent, and synced to the catalog.
               </p>
             </div>
           </div>
@@ -613,11 +587,10 @@ const Landing = () => {
                 <span className="text-sm font-medium">Catalog Viewer</span>
               </div>
               <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
-                Clear tracks faster than ever
+                Clear Tracks Faster than Ever
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
-              Store your entire catalog in one place. See metadata, context, and licensing status at a glance. 
-              Because Catalog, Search, and Pitch Kits live together, every song is one click away from being pitched or cleared.
+              Drag and drop all your songs, and have it all in one place. See metadata, mood, and licensing status at a glance. Having the catalog integrated with the smart catalog search engine and pitch kit builder, Viola streamlines the music sync process in one workspace. 
               </p>
               
             </div>
@@ -644,7 +617,7 @@ const Landing = () => {
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="text-center">
             <p className="uppercase tracking-[0.2em] text-white font-dm text-xs mb-3">Outcomes</p>
-            <h2 className="text-3xl md:text-4xl font-zen font-semibold text-white">What changes when you use Viola.</h2>
+            <h2 className="text-3xl md:text-4xl font-zen font-semibold text-white">What changes when you use Viola</h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 ">
@@ -691,57 +664,50 @@ const Landing = () => {
       <section className="px-4 sm:px-6 py-16 md:py-20">
         <div className="max-w-6xl mx-auto space-y-10">
           <div className="text-center">
-            <p className="uppercase tracking-[0.2em] text-white font-dm text-xs mb-3">CLEAR THE NOISE: Who It’s For</p>
-            <h2 className="text-3xl md:text-4xl font-zen font-semibold text-white">Built for people whose job is taste.</h2>
+            <p className="uppercase tracking-[0.2em] text-white font-dm text-xs mb-3">CLEAR THE NOISE: Who It's For</p>
+            <h2 className="text-3xl md:text-4xl font-zen font-semibold text-white">Built For People Who Have Musical Taste</h2>
           </div>
 
-          <div
-            className="relative w-full max-w-5xl mx-auto"
-            onMouseMove={handleCanvasMouseMove}
-            onMouseLeave={handleCanvasMouseLeave}
-          >
-            <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-white/10 via-[#e4ea04]/10 to-white/5 blur-xl"></div>
-            <div className="relative rounded-[32px] border border-white/15 bg-black/70 overflow-hidden shadow-[0_40px_120px_rgba(0,0,0,0.55),0_0_35px_rgba(228,234,4,0.18)]">
-              <img
-                src="/canvas.png"
-                alt="Viola canvas blurred"
-                className="w-full h-full object-cover min-h-[360px] md:min-h-[480px] lg:min-h-[560px] blur-[12px] scale-[1.04]"
-              />
-              <img
-                src="/canvas.png"
-                alt="Viola canvas"
-                className="absolute inset-0 w-full h-full object-cover min-h-[360px] md:min-h-[480px] lg:min-h-[560px]"
-                style={{
-                  maskImage: `radial-gradient(260px 180px at ${canvasSpotlight.x}% ${canvasSpotlight.y}%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 80%)`,
-                  WebkitMaskImage: `radial-gradient(260px 180px at ${canvasSpotlight.x}% ${canvasSpotlight.y}%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 80%)`
-                }}
-              />
-              <div className="pointer-events-none invisible sm:visible absolute inset-4 flex items-center justify-center font-bold">
-                <span className="absolute top-4 left-1/2 -translate-x-1/2 text-[11px] sm:text-xs tracking-[0.35em] uppercase text-white/80">For the people</span>
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-[11px] sm:text-xs tracking-[0.35em] uppercase text-white/80">who pick the song</span>
-                <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rotate-180 text-[11px] sm:text-xs tracking-[0.35em] uppercase text-white/80">that makes</span>
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 -rotate-90 text-[11px] sm:text-xs tracking-[0.35em] uppercase text-white/80">the scene.</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-            <div className="p-5 md:p-6 space-y-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)] text-center">
-              <p className="text-white text-sm uppercase tracking-[0.15em] font-zen">Perfect if you are a</p>
-              <ul className="space-y-2 text-white/50">
-                <li>Music supervisor</li>
-                <li>Sync / licensing director</li>
-                <li>Trailer or games music editor</li>
-                <li>Agency producer or editor</li>
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+            <div className="relative p-8 md:p-10 space-y-4 rounded-2xl border-2 border-[#e4ea04]/40 bg-gradient-to-br from-[#e4ea04]/10 via-black/60 to-black/80 backdrop-blur-sm text-center shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_30px_rgba(228,234,4,0.15)] hover:border-[#e4ea04]/60 transition-all duration-300">
+              <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#e4ea04] shadow-[0_0_10px_rgba(228,234,4,0.8)]"></div>
+              <p className="text-[#e4ea04] text-sm uppercase tracking-[0.15em] font-zen font-semibold">Perfect if you are a</p>
+              <ul className="space-y-3 text-white/80 text-base">
+                <li className="flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
+                  <span>Music Supervisor</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
+                  <span>Sync Licensing Manager</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
+                  <span>Sync Agency Owner</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
+                  <span>Record Label or Publishing Company Team </span>
+                </li>
               </ul>
             </div>
 
-            <div className="p-5 md:p-6 space-y-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)] text-center">
-              <p className="text-white text-sm uppercase tracking-[0.15em] font-zen">And you’re tired of</p>
-              <ul className="space-y-2 text-white/50">
-                <li>Digging through clunky library interfaces</li>
-                <li>Chasing rights info across spreadsheets</li>
-                <li>Losing half a day to every temp track swap</li>
+            <div className="relative p-8 md:p-10 space-y-4 rounded-2xl border-2 border-[#ee481f]/40 bg-gradient-to-br from-[#ee481f]/10 via-black/60 to-black/80 backdrop-blur-sm text-center shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_30px_rgba(238,72,31,0.15)] hover:border-[#ee481f]/60 transition-all duration-300">
+              <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#ee481f] shadow-[0_0_10px_rgba(238,72,31,0.8)]"></div>
+              <p className="text-[#ee481f] text-sm uppercase tracking-[0.15em] font-zen font-semibold">And you're tired of</p>
+              <ul className="space-y-3 text-white/80 text-base">
+                <li className="flex items-center justify-center gap-2">
+                  <X className="w-4 h-4 text-[#ee481f]" />
+                  <span>Digging through clunky library interfaces</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <X className="w-4 h-4 text-[#ee481f]" />
+                  <span>Chasing rights info across spreadsheets</span>
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <X className="w-4 h-4 text-[#ee481f]" />
+                  <span>Losing half a day to every temp track swap</span>
+                </li>
               </ul>
             </div>
           </div>

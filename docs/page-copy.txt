@@ -2,7 +2,7 @@ Landing page copy (Viola)
 
 Navigation/Hero:
 - Headline: "from brief to cleared track < 30 minutes."
-- Subhead: "Viola is an AI-powered file management tool to streamline work for the creative music tastemakers. Your taste, your timeline, and your sanity all intact."
+- Subhead: "Viola is an AI-powered music workspace to streamline work for sync teams and creative music tastemakers. Locate, Shortlist, and Clear the right tracks without losing your day or sanity"
 - CTA: "Request Early Access"
 
 Credibility/Testimonial:
