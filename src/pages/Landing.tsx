@@ -494,8 +494,8 @@ const Landing = () => {
                 <BrainCircuit className="w-4 h-4" />
                 <span className="text-sm font-medium">AI Search</span>
               </div>
-              <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
-                Find the Perfect Track in Seconds
+              <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white leading-tight" style={{ whiteSpace: 'pre-line' }}>
+                Find the Perfect{'\n'}Track in Seconds
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
               Type what you would say in your natural language: "dark and eerie songs where the lead girl and boy are being chased in the woods, subtle vocal, 130 bpm, no explicit lyrics." Viola understands the mood, genre, tempo, reference, and story context. No more blind metadata  keyword filtering and guessing, or endless scroll. Just say what you need, and Viola pulls the right tracks that actually feels right to you.
@@ -586,8 +586,8 @@ const Landing = () => {
                 <CloudUpload className="w-4 h-4" />
                 <span className="text-sm font-medium">Catalog Viewer</span>
               </div>
-              <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
-                Clear Tracks Faster than Ever
+              <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white leading-tight" style={{ whiteSpace: 'pre-line' }}>
+                Clear Tracks{'\n'}Faster Than Ever
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
               Drag and drop all your songs, and have it all in one place. See metadata, mood, and licensing status at a glance. Having the catalog integrated with the smart catalog search engine and pitch kit builder, Viola streamlines the music sync process in one workspace. 
