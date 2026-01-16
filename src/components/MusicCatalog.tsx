@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { ArrowUp, Play, Plus, Loader2 } from "lucide-react";
+import { ArrowUp, Play, Plus, Minus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import API_ENDPOINTS from "@/config/api";
 
@@ -34,6 +34,30 @@ interface CatalogResponse {
     total_pages?: number;
   };
 }
+
+const detailVariants = [
+  {
+    iswc: "C0101010101",
+    isrc: "HLBD35793507",
+    writers: ["Jude Gabriel Kozielec", "Ryan Chan", "Kyung Tae Kim"],
+    extraGenres: ["R&B", "Afro-Beat"],
+    extraMoods: ["Playful", "Upbeat", "Soothing"],
+  },
+  {
+    iswc: "C0202020202",
+    isrc: "HLBD33591588",
+    writers: ["Mina Park", "Damon Wu", "Clara Swift"],
+    extraGenres: ["Pop", "Synthwave"],
+    extraMoods: ["Moody", "Chill", "Focused"],
+  },
+  {
+    iswc: "C0303030303",
+    isrc: "HLBD28177421",
+    writers: ["Andre Sol", "Mira Voss"],
+    extraGenres: ["Indie", "Alt Rock"],
+    extraMoods: ["Reflective", "Warm"],
+  },
+];
 
 // Default/fallback songs
 const defaultSongs: Song[] = [
@@ -382,6 +406,7 @@ export const MusicCatalog = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [expandedSongId, setExpandedSongId] = useState<number | null>(null);
   const pageSize = 30; // Show 30 songs per page in the catalog
 
   // Load songs from MongoDB backend API with pagination
@@ -473,13 +498,9 @@ export const MusicCatalog = () => {
   };
 
   return (
-    <section className="w-full min-h-screen text-white font-exo">
-      <div className="min-h-screen w-full px-10 py-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-dm">Your Catalog</h1>
-        </div>
-
-        <div className="mt-6 rounded-[28px] border border-white/20 bg-black/40 backdrop-blur-[26px] p-6 shadow-[0_0_28px_rgba(0,0,0,0.35)]">
+    <section className="w-full h-full min-h-0 text-white font-exo">
+      <div className="h-full min-h-0 w-full px-10 py-8 flex flex-col">
+        <div className="mt-6 flex-1 min-h-0 flex flex-col">
           <div className="flex items-center justify-between gap-6 rounded-full border border-white/30 bg-black/40 px-6 py-3 shadow-[inset_0_0_24px_rgba(255,255,255,0.08)]">
             <div className="flex items-center gap-4 text-white/70">
               <img src="/flower.png" alt="Search" className="h-5 w-5" />
@@ -515,47 +536,105 @@ export const MusicCatalog = () => {
             </div>
           ) : (
             <>
-              <div className="mt-8 grid grid-cols-[60px_90px_1fr_1fr_1fr_140px_140px_120px_120px] gap-4 px-2 text-sm text-white/70 font-dm">
+              <div className="mt-8 grid grid-cols-[60px_90px_1fr_1fr_1fr_140px_140px_120px_120px] gap-4 px-2 text-sm text-white font-dm">
                 <div>#</div>
                 <div></div>
                 <div>Title</div>
                 <div>Artist</div>
                 <div>Album</div>
-                <div className="text-center">Genre</div>
-                <div className="text-center">Mood</div>
-                <div className="text-center">Duration</div>
-                <div className="text-center">Details</div>
+                <div className="">Genre</div>
+                <div className="">Mood</div>
+                <div className="">Duration</div>
+                <div className="">Details</div>
               </div>
 
-              <div className="mt-4 space-y-3">
-                {songs.map((song, index) => (
-                  <div
-                    key={song.id}
-                    className="grid grid-cols-[60px_90px_1fr_1fr_1fr_140px_140px_120px_120px] gap-4 items-center rounded-xl border border-white/20 bg-black/40 px-4 py-3 shadow-[0_0_22px_rgba(0,0,0,0.35)]"
-                  >
-                    <div className="text-white/80 font-dm">
-                      {(currentPage - 1) * pageSize + index + 1}
+              <div className="mt-4 flex-1 min-h-0 overflow-y-auto pr-2 space-y-3">
+                {songs.map((song, index) => {
+                  const detail = detailVariants[index % detailVariants.length];
+                  const rowId = song.id || index + 1;
+                  const isExpanded = expandedSongId === rowId;
+
+                  return (
+                    <div
+                      key={rowId}
+                      className="rounded-xl border border-white/20 bg-black/40 px-4 py-3 shadow-[0_0_22px_rgba(0,0,0,0.35)] transition"
+                    >
+                      <div className="grid grid-cols-[60px_90px_1fr_1fr_1fr_140px_140px_120px_120px] gap-2 items-center">
+                        <div className="text-white/80 font-dm">
+                          {(currentPage - 1) * pageSize + index + 1}
+                        </div>
+                        <div className="h-12 w-12 rounded bg-white/10 flex items-center justify-center">
+                          {song.thumbnail}
+                        </div>
+                        <div className="text-white">{song.title}</div>
+                        <div className="text-white/80">{song.artist}</div>
+                        <div className="text-white/80">{song.album}</div>
+                        <div className=" text-white/80">{song.genre}</div>
+                        <div className=" text-white/80">{song.mood}</div>
+                        <div className=" text-white/80 font-dm">{song.duration}</div>
+                        <div className="flex items-center justify-center gap-3 text-sm text-white/70">
+                          <span>{isExpanded ? "Collapse" : "See more..."}</span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedSongId(isExpanded ? null : rowId)
+                            }
+                            className="h-6 w-6 rounded-full bg-white text-black flex items-center justify-center"
+                            aria-label="Toggle details"
+                          >
+                            {isExpanded ? (
+                              <Minus className="h-3 w-3" />
+                            ) : (
+                              <Plus className="h-3 w-3" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="mt-4 grid grid-cols-[60px_90px_1fr_1fr_1fr_140px_140px_120px_120px] gap-4 px-1 text-sm text-white/70">
+                          <div />
+                          <div />
+                          <div className="space-y-3">
+                            <div>
+                              <div className="text-xs uppercase tracking-[0.2em] text-white/40">ISWC</div>
+                              <div className="text-white font-dm">{detail.iswc}</div>
+                            </div>
+                            <div>
+                              <div className="text-xs uppercase tracking-[0.2em] text-white/40">ISRC</div>
+                              <div className="text-white font-dm">{detail.isrc}</div>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="text-xs uppercase tracking-[0.2em] text-white/40">Writers/Composers</div>
+                            {detail.writers.map((writer) => (
+                              <div key={writer} className="text-white">
+                                {writer}
+                              </div>
+                            ))}
+                          </div>
+                          <div />
+                          <div className="space-y-2 text-center">
+                            {detail.extraGenres.map((genre) => (
+                              <div key={genre} className="text-white">
+                                {genre}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="space-y-2 text-center">
+                            {detail.extraMoods.map((mood) => (
+                              <div key={mood} className="text-white">
+                                {mood}
+                              </div>
+                            ))}
+                          </div>
+                          <div />
+                          <div />
+                        </div>
+                      )}
                     </div>
-                    <div className="h-12 w-12 rounded bg-white/10 flex items-center justify-center">
-                      {song.thumbnail}
-                    </div>
-                    <div className="text-white">{song.title}</div>
-                    <div className="text-white/80">{song.artist}</div>
-                    <div className="text-white/80">{song.album}</div>
-                    <div className="text-center text-white/80">{song.genre}</div>
-                    <div className="text-center text-white/80">{song.mood}</div>
-                    <div className="text-center text-white/80 font-dm">{song.duration}</div>
-                    <div className="flex items-center justify-center gap-3 text-sm text-white/70">
-                      <span>See more...</span>
-                      <button
-                        type="button"
-                        className="h-6 w-6 rounded-full bg-white text-black flex items-center justify-center"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-4 text-sm text-white/60">

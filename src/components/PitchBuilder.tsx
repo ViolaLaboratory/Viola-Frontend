@@ -9,7 +9,7 @@ import {
   DialogDescription,
   DialogFooter 
 } from "@/components/ui/dialog";
-import { CheckCircle2, Loader2, MoreHorizontal, Plus, Pencil, Trash2, ArrowUp, Play, ThumbsUp, MessageCircle, X } from "lucide-react";
+import { CheckCircle2, Loader2, MoreHorizontal, Plus, Pencil, Trash2, ArrowUp, Play, ThumbsUp, MessageCircle, X, SkipBack, SkipForward } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,7 +84,7 @@ export const PitchBuilder = () => {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"builder" | "client" | "link">("builder");
-  const [clientName, setClientName] = useState("Stranger Things");
+  const [clientName, setClientName] = useState("Netflix");
   const [clientProject, setClientProject] = useState("Stranger Things, S1E4");
   const [clientColor, setClientColor] = useState("red");
   const [clientDescription, setClientDescription] = useState(
@@ -294,120 +294,139 @@ export const PitchBuilder = () => {
         </div>
       )}
 
-      <div className="relative h-full min-h-screen w-full text-white font-exo">
-        <div className="h-full w-full px-8 py-6">
+      <div className="relative min-h-screen w-full overflow-hidden text-white font-exo">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#08080a_0%,#0b0b12_45%,#180a25_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_85%,rgba(137,28,45,0.55),transparent_55%),radial-gradient(circle_at_75%_30%,rgba(67,59,120,0.45),transparent_60%)] opacity-80" />
+        <div className="relative z-10 h-full w-full px-8 py-6">
           <div className="text-sm text-white/70 font-dm">{viewLabel}</div>
 
-          <div className="mt-5 flex h-[calc(100vh-140px)] gap-6">
-            <aside className="w-64 shrink-0 rounded-2xl border border-white/15 bg-black/40 backdrop-blur-[18px] p-4">
-              <div className="space-y-3">
-                {folders.map((folder) => (
-                  <div
-                    key={folder.id}
-                    className={`group flex items-center justify-between rounded-xl px-3 py-2 transition ${
-                      selectedFolderId === folder.id
-                        ? "bg-white/10 text-white"
-                        : "text-white/70 hover:bg-white/5"
-                    }`}
-                    onClick={() => setSelectedFolderId(folder.id)}
-                  >
+          <div className="mt-5 flex min-h-[calc(100vh-160px)] gap-10">
+            <aside className="w-60 shrink-0">
+              <div className="space-y-4">
+                <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+                  {folders.map((folder) => (
+                    <div
+                      key={folder.id}
+                      className={`group flex items-center justify-between rounded-2xl border border-white/10 px-4 py-3 transition ${
+                        selectedFolderId === folder.id
+                          ? "bg-white/20 text-white"
+                          : "bg-white/5 text-white/70 hover:bg-white/15"
+                      }`}
+                      onClick={() => setSelectedFolderId(folder.id)}
+                    >
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-white/15 flex items-center justify-center text-xs font-dm">
+                      <div
+                        className={`h-10 w-10 rounded-full flex items-center justify-center text-xs font-dm ${
+                          selectedFolderId === folder.id
+                            ? "bg-red-500 text-white"
+                            : "bg-white/15 text-white/80"
+                        }`}
+                      >
                         {folder.name.slice(0, 1).toUpperCase()}
                       </div>
-                      <div className="text-sm truncate">{folder.name}</div>
+                        <div className="text-sm truncate">{folder.name}</div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded"
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label="Pitch kit options"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44 bg-black/80 border border-white/20 text-white">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRenameFolder(folder.id);
+                            }}
+                            className="focus:bg-white/10"
+                          >
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-white/10" />
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteFolder(folder.id);
+                            }}
+                            className="text-red-200 focus:bg-white/10"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded"
-                          onClick={(e) => e.stopPropagation()}
-                          aria-label="Pitch kit options"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44 bg-black/80 border border-white/20 text-white">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRenameFolder(folder.id);
-                          }}
-                          className="focus:bg-white/10"
-                        >
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Rename
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-white/10" />
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteFolder(folder.id);
-                          }}
-                          className="text-red-200 focus:bg-white/10"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                ))}
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10"
+                  ))}
+                </div>
+
+                <button
+                  type="button"
                   onClick={() => setShowCreateDialog(true)}
+                  className="flex h-12 w-full items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white/80 hover:text-white hover:bg-white/15 shadow-[0_0_12px_rgba(0,0,0,0.3)]"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Pitch Kit
-                </Button>
+                  <Plus className="h-4 w-4" />
+                </button>
+
               </div>
             </aside>
 
-            <main className="flex-1 min-w-0 overflow-y-auto pr-4">
-              <div className="flex items-center justify-between gap-6">
-                <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full ${clientBadgeClass} flex items-center justify-center text-sm font-dm`}>
+            <main className="relative flex-1 min-w-0">
+              <img
+                src="/vynl.png"
+                alt="Vinyl"
+                className="pointer-events-none absolute right-[-120px] top-0 w-[680px] opacity-90 drop-shadow-[0_0_45px_rgba(0,0,0,0.55)]"
+              />
+              <div className="relative z-10 h-full pr-6 overflow-y-auto">
+                <div className="flex items-start justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className={`h-12 w-12 rounded-full ${clientBadgeClass} flex items-center justify-center text-sm font-dm`}>
                     {clientName.slice(0, 1).toUpperCase()}
                   </div>
                   <div>
-                    <div className="text-2xl font-dm">{selectedFolder?.name ?? "Select a kit"}</div>
-                    <div className="text-xs text-white/50">
-                      Last update: {formatUpdatedAt(selectedFolder?.updatedAt)}
+                    <div className="text-3xl font-dm">{selectedFolder?.name ?? "Select a kit"}</div>
+                    <div className="text-sm text-white/60">
+                      Last update, {formatUpdatedAt(selectedFolder?.updatedAt)}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Button
-                    size="sm"
-                    className="bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-full px-4"
-                    onClick={() => setViewMode("client")}
-                  >
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  {viewMode !== "link" ? (
+                <div className="flex flex-col items-end gap-3">
+                  <div className="flex items-center gap-3">
                     <Button
                       size="sm"
-                      className="bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-full px-4"
-                      onClick={() => setViewMode("link")}
+                      className="bg-white/5 text-white border border-white/25 hover:bg-white/15 rounded-full px-5 font-dm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-[0_0_0_1px_rgba(255,255,255,0.12)]"
+                      onClick={() => setViewMode("client")}
                     >
-                      View Results
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit
                     </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      className="bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-full px-4"
-                      onClick={() => setViewMode("builder")}
-                    >
-                      Back to Builder
-                    </Button>
-                  )}
+                    {viewMode !== "link" ? (
+                      <Button
+                        size="sm"
+                        className="bg-white/5 text-white border border-white/25 hover:bg-white/15 rounded-full px-5 font-dm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-[0_0_0_1px_rgba(255,255,255,0.12)]"
+                        onClick={() => setViewMode("link")}
+                      >
+                        View Results
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="bg-white/10 text-white border border-white/30 hover:bg-white/20 rounded-full px-5 font-dm focus-visible:ring-0 focus-visible:ring-offset-0"
+                        onClick={() => setViewMode("builder")}
+                      >
+                        Back to Builder
+                      </Button>
+                    )}
+                  </div>
                   {viewMode === "builder" ? (
                     <Button
                       size="sm"
-                      className="bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-full px-4"
+                      className="bg-white/5 text-white border border-white/25 hover:bg-white/15 rounded-full px-6 font-dm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-[0_0_0_1px_rgba(255,255,255,0.12)]"
                       onClick={handleExport}
                       disabled={status === "loading"}
                     >
@@ -417,7 +436,7 @@ export const PitchBuilder = () => {
                   ) : (
                     <Button
                       size="sm"
-                      className="bg-white text-black hover:bg-white/90 rounded-full px-4"
+                      className="bg-white text-black hover:bg-white/90 rounded-full px-6 focus-visible:ring-0 focus-visible:ring-offset-0"
                       onClick={handleCopyLink}
                     >
                       {linkCopied ? "Link Copied" : "Copy Link"}
@@ -426,18 +445,18 @@ export const PitchBuilder = () => {
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-[minmax(0,1fr)_340px] gap-6">
-                <div className="space-y-4">
-                  <div className="rounded-2xl border border-white/15 bg-black/40 p-5 shadow-[0_0_24px_rgba(0,0,0,0.35)]">
-                    <div className="text-sm text-white/60">Prepared for {clientName || "Client"}</div>
-                    <div className="text-lg font-dm text-white">{clientProject || "Project Name"}</div>
-                    <div className="mt-3 rounded-xl bg-black/40 p-4 text-sm text-white/70">
-                      {clientDescription}
-                    </div>
+              <div className="mt-6 w-full max-w-[820px] space-y-6">
+                <div className="relative rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,18,0.75),rgba(10,10,12,0.85))] p-6 shadow-[0_0_28px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+                  <div className="text-sm text-white/60">Prepared for {clientName || "Client"}</div>
+                  <div className="text-xl font-dm text-white">{clientProject || "Project Name"}</div>
+                  <div className="mt-4 rounded-2xl bg-white/10 p-4 text-sm text-white/70">
+                    {clientDescription}
+                  </div>
+                  <div className="absolute right-4 top-4 h-12 w-12 rounded-full bg-[#0f1e2e] border border-white/10 flex items-center justify-center text-[10px] font-dm text-[#b5ff4e]">
+                    BMG
                   </div>
 
-                  <div className="rounded-2xl border border-white/15 bg-black/40 p-5 shadow-[0_0_24px_rgba(0,0,0,0.35)]">
-                    <div className="text-lg font-dm text-white mb-4">Songs</div>
+                  <div className="mt-5 space-y-3">
                     {isLoadingSongs ? (
                       <div className="flex items-center justify-center py-8 text-white/70">
                         <Loader2 className="h-6 w-6 animate-spin text-white/70" />
@@ -448,22 +467,22 @@ export const PitchBuilder = () => {
                         {recommendedSongs.map((song) => (
                           <div
                             key={song.id}
-                            className="flex items-center gap-4 rounded-xl border border-white/10 bg-black/50 px-4 py-3"
+                            className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
                           >
                             <button
                               type="button"
-                              className="h-10 w-10 rounded-md border border-white/30 flex items-center justify-center"
+                              className="flex h-12 w-12 items-center justify-center rounded-md bg-white text-black"
                             >
-                              <Play className="h-4 w-4" />
+                              <Play className="h-5 w-5" />
                             </button>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-3">
-                                <span className="text-white">{song.title}</span>
-                                <span className="text-white/50 text-sm">{song.artist}</span>
-                                <span className="text-white/50 text-sm hidden sm:inline">{song.album}</span>
-                              </div>
+                              <div className="text-white">{song.title}</div>
+                              <div className="text-white/50 text-xs">{song.artist}</div>
+                              <div className="text-white/40 text-xs">{song.album}</div>
                             </div>
-                            <div className="text-sm text-white/70 font-dm">{song.duration}</div>
+                            <div className="text-sm text-white/70 font-dm w-14 text-right">
+                              {song.duration}
+                            </div>
                             {viewMode === "link" ? (
                               <div className="flex items-center gap-2">
                                 <button className="h-7 w-7 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
@@ -477,12 +496,19 @@ export const PitchBuilder = () => {
                                 </button>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-3">
-                                <button className="text-xs text-white/60 hover:text-white">See more...</button>
+                              <div className="flex items-center gap-3 text-xs text-white/60">
+                                <span>See More...</span>
+                                <button
+                                  type="button"
+                                  className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-black"
+                                  aria-label="Add track"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveTrackFromFolder(song.id)}
-                                  className="h-7 w-7 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:text-white"
+                                  className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-black"
                                   aria-label="Remove track"
                                 >
                                   <Trash2 className="h-3 w-3" />
@@ -500,9 +526,41 @@ export const PitchBuilder = () => {
                   </div>
                 </div>
 
-                <div className="hidden xl:flex items-center justify-center">
-                  <div className="h-[320px] w-[320px] rounded-full border border-white/20 bg-[radial-gradient(circle_at_35%_35%,rgba(255,255,255,0.6),rgba(255,255,255,0.05)_55%,rgba(0,0,0,0.9)_75%)] shadow-[0_0_40px_rgba(255,255,255,0.08)]" />
+                <div className="rounded-2xl border border-white/15 bg-black/60 px-5 py-4 shadow-[0_0_24px_rgba(0,0,0,0.4)] backdrop-blur">
+                  <div className="flex items-center gap-4">
+                    <img
+                      src="/NoteAlbumArt.png"
+                      alt="Now playing"
+                      className="h-12 w-12 rounded-md"
+                    />
+                    <div className="text-sm">
+                      <div className="text-white">Song Title</div>
+                      <div className="text-white/60">Artist Name</div>
+                      <div className="text-white/60">Album Name</div>
+                    </div>
+                    <div className="flex-1 px-6">
+                      <div className="relative h-[3px] bg-white/20 rounded-full">
+                        <div className="absolute left-0 top-0 h-full w-[35%] bg-white rounded-full" />
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-white/60 mt-2 font-dm">
+                        <span>00:00</span>
+                        <span>2:37</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button type="button" className="h-9 w-9 rounded-full border border-white/40 flex items-center justify-center focus-visible:ring-0 focus-visible:ring-offset-0">
+                        <SkipBack className="h-4 w-4" />
+                      </button>
+                      <button type="button" className="h-9 w-9 rounded-full border border-white/40 flex items-center justify-center focus-visible:ring-0 focus-visible:ring-offset-0">
+                        <Play className="h-4 w-4" />
+                      </button>
+                      <button type="button" className="h-9 w-9 rounded-full border border-white/40 flex items-center justify-center focus-visible:ring-0 focus-visible:ring-offset-0">
+                        <SkipForward className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
+              </div>
               </div>
             </main>
           </div>
@@ -511,27 +569,27 @@ export const PitchBuilder = () => {
 
       {viewMode === "client" && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur">
-          <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#2a2a2f] p-8 text-white shadow-[0_0_40px_rgba(0,0,0,0.4)]">
+          <div className="w-full max-w-2xl rounded-2xl border border-white/20 bg-black/70 p-8 text-white shadow-[0_0_40px_rgba(0,0,0,0.4)] backdrop-blur-xl">
             <div className="mb-6 text-xl font-dm">Client</div>
             <div className="space-y-4">
               <Input
                 placeholder="(e.g) Disney"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="bg-white text-black"
+                className="bg-white/10 text-white border-white/20 placeholder:text-white/40 focus:border-white/40"
               />
               <div className="text-lg font-dm">Film/TV/Video Game/Commercial</div>
               <Input
                 placeholder="(e.g) Coca Cola Commercial"
                 value={clientProject}
                 onChange={(e) => setClientProject(e.target.value)}
-                className="bg-white text-black"
+                className="bg-white/10 text-white border-white/20 placeholder:text-white/40 focus:border-white/40"
               />
               <div className="text-lg font-dm">Color</div>
               <select
                 value={clientColor}
                 onChange={(e) => setClientColor(e.target.value)}
-                className="h-10 w-full rounded-md bg-white px-3 text-black"
+                className="h-10 w-full rounded-md bg-white/10 px-3 text-white border border-white/20"
               >
                 <option value="red">Red</option>
                 <option value="purple">Purple</option>
@@ -543,12 +601,12 @@ export const PitchBuilder = () => {
               <textarea
                 value={clientDescription}
                 onChange={(e) => setClientDescription(e.target.value)}
-                className="h-24 w-full rounded-md bg-white px-3 py-2 text-sm text-black"
+                className="h-24 w-full rounded-md bg-white/10 px-3 py-2 text-sm text-white border border-white/20 placeholder:text-white/40 focus:border-white/40"
               />
             </div>
             <div className="mt-6 flex justify-end">
               <Button
-                className="bg-white text-black hover:bg-white/90 rounded-full px-6"
+                className="bg-white/10 text-white border border-white/30 hover:bg-white/20 rounded-full px-6 focus-visible:ring-0 focus-visible:ring-offset-0"
                 onClick={() => setViewMode("builder")}
               >
                 Done
@@ -560,7 +618,7 @@ export const PitchBuilder = () => {
 
     {/* Create Folder Dialog */}
     <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-      <DialogContent>
+      <DialogContent className="bg-black/80 text-white border border-white/20 backdrop-blur-xl">
         <DialogHeader>
           <DialogTitle>Create New Folder</DialogTitle>
           <DialogDescription>
@@ -576,13 +634,22 @@ export const PitchBuilder = () => {
               handleCreateFolder();
             }
           }}
+          className="bg-white/10 text-white border-white/20 placeholder:text-white/40 focus:border-white/40"
           autoFocus
         />
         <DialogFooter>
-          <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+          <Button
+            variant="outline"
+            onClick={() => setShowCreateDialog(false)}
+            className="border-white/30 text-white hover:bg-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
+          >
             Cancel
           </Button>
-          <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+          <Button
+            onClick={handleCreateFolder}
+            disabled={!newFolderName.trim()}
+            className="bg-white/10 text-white border border-white/30 hover:bg-white/20 focus-visible:ring-0 focus-visible:ring-offset-0"
+          >
             Create
           </Button>
         </DialogFooter>
@@ -591,7 +658,7 @@ export const PitchBuilder = () => {
 
     {/* Rename Folder Dialog */}
     <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
-      <DialogContent>
+      <DialogContent className="bg-black/80 text-white border border-white/20 backdrop-blur-xl">
         <DialogHeader>
           <DialogTitle>Rename Folder</DialogTitle>
           <DialogDescription>
@@ -607,13 +674,22 @@ export const PitchBuilder = () => {
               handleSaveRename();
             }
           }}
+          className="bg-white/10 text-white border-white/20 placeholder:text-white/40 focus:border-white/40"
           autoFocus
         />
         <DialogFooter>
-          <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
+          <Button
+            variant="outline"
+            onClick={() => setShowRenameDialog(false)}
+            className="border-white/30 text-white hover:bg-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSaveRename} disabled={!renameFolderName.trim()}>
+          <Button
+            onClick={handleSaveRename}
+            disabled={!renameFolderName.trim()}
+            className="bg-white/10 text-white border border-white/30 hover:bg-white/20 focus-visible:ring-0 focus-visible:ring-offset-0"
+          >
             Save
           </Button>
         </DialogFooter>
