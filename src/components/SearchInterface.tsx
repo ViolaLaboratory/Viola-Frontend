@@ -81,6 +81,51 @@ const mockSongs: Song[] = [
     keywords: ["Darkwave", "Ethereal", "Cold", "Electronic"],
     duration: "03:58",
   },
+  {
+    id: 6,
+    title: "Shadow Work",
+    artist: "Nyx Collective",
+    album: "Nocturnal Bloom",
+
+    keywords: ["Mysterious", "Hypnotic", "Minimal", "Deep"],
+    duration: "04:22",
+  },
+  {
+    id: 7,
+    title: "Crimson Hour",
+    artist: "Scarlet Waves",
+    album: "Afterglow",
+
+    keywords: ["Melancholic", "Atmospheric", "Emotional", "Cinematic"],
+    duration: "03:45",
+  },
+  {
+    id: 8,
+    title: "Void Walker",
+    artist: "Echo Chamber",
+    album: "Infinite Silence",
+
+    keywords: ["Ambient", "Dark", "Expansive", "Meditative"],
+    duration: "05:12",
+  },
+  {
+    id: 9,
+    title: "Phantom Strings",
+    artist: "String Theory",
+    album: "Resonance",
+
+    keywords: ["Orchestral", "Tense", "Building", "Dramatic"],
+    duration: "03:28",
+  },
+  {
+    id: 10,
+    title: "Neon Grave",
+    artist: "Cyber Elegy",
+    album: "Digital Requiem",
+
+    keywords: ["Synthwave", "Retro", "Nostalgic", "Melancholic"],
+    duration: "04:01",
+  },
 ];
 
 const typingPhrases = [

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,9 +37,35 @@ export const ResultsPanel = ({
   searchResults,
   fallbackSongs,
 }: ResultsPanelProps) => {
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+
+  // Default to first song if no selection yet
+  const displayedSong = selectedSong || (searchResults.length > 0 ? searchResults[0] : fallbackSongs[0]);
+  const songsToDisplay = searchResults.length > 0 ? searchResults : fallbackSongs;
+
   if (!isLoading && !showResults) {
     return null;
   }
+
+  // Helper to split keywords into genres and moods (simple heuristic)
+  const getGenresAndMoods = (keywords: string[]) => {
+    // Common genre-like keywords
+    const genreKeywords = ["Kpop", "Pop", "Pop Punk", "Emo Pop", "R&B", "Hip Hop", "Electronic", "EDM", "Indie", "Rock", "Synthwave", "Alternative", "Ambient", "Darkwave", "Orchestral", "Cinematic"];
+    // Common mood-like keywords
+    const moodKeywords = ["Dark", "Suspense", "Eerie", "Suspenseful", "Atmospheric", "Horror", "Tension", "Mysterious", "Haunting", "Ethereal", "Cold", "Hypnotic", "Minimal", "Deep", "Melancholic", "Emotional", "Expansive", "Meditative", "Tense", "Building", "Dramatic", "Retro", "Nostalgic"];
+    
+    const genres = keywords.filter(k => genreKeywords.some(g => k.includes(g) || g.includes(k)));
+    const moods = keywords.filter(k => moodKeywords.some(m => k.includes(m) || m.includes(k)));
+    
+    // Fallback to first 3 keywords as genres if no match
+    const finalGenres = genres.length > 0 ? genres : keywords.slice(0, 3);
+    // Fallback to remaining keywords as moods if no match
+    const finalMoods = moods.length > 0 ? moods : (keywords.slice(3) || keywords.slice(0, 2));
+    
+    return { genres: finalGenres, moods: finalMoods };
+  };
+
+  const { genres, moods } = displayedSong ? getGenresAndMoods(displayedSong.keywords || []) : { genres: [], moods: [] };
 
   return (
     <section className="w-2/3 p-8 h-screen overflow-y-auto font-exo text-white mt-3 z-5">
@@ -56,41 +83,35 @@ export const ResultsPanel = ({
         ) : (
           <div className="h-full flex flex-col gap-10 text-white">
             <div className="flex items-start gap-12">
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex w-[320px] flex-col items-center gap-4 shrink-0">
                 {/* CTO FIX: replace with final album art + CD case assets */}
-                <div className="relative h-48 w-48 flex items-center justify-center">
+                <div className="relative h-64 w-64 flex items-center justify-center">
                   <img
                     src="/NoteAlbumArt.png"
                     alt="Album art"
-                    className="album-spin is-spinning h-40 w-40 rounded-full object-cover"
+                    className="album-spin is-spinning h-56 w-56 rounded-full object-cover"
                     style={{ animationPlayState: isPlaying ? "running" : "paused" }}
                   />
-                  <img
-                    src="/cd_overlay.png"
-                    alt="CD Overlay"
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
                 </div>
-                <div className="text-center">
-                  <div className="text-xl font-dm">Bite Me</div>
-                  <div className="text-xs uppercase tracking-[0.25em] text-white font-exo">
-                    ENHYPEN
+                <div className="w-full px-2 text-center h-[54px] flex flex-col justify-center">
+                  <div className="text-xl font-dm truncate whitespace-nowrap overflow-hidden text-ellipsis">
+                    {displayedSong?.title || "Bite Me"}
+                  </div>
+                  <div className="text-xs uppercase tracking-[0.25em] text-white font-exo truncate whitespace-nowrap overflow-hidden text-ellipsis">
+                    {displayedSong?.artist || "ENHYPEN"}
                     <span className="mx-2 inline-block h-1 w-1 rounded-full bg-white align-middle" />
-                    DARK BLOOD
-                  </div>
-                  <div className="text-xs uppercase tracking-[0.25em] text-white font-exo">
-                    BELIFT LAB
+                    {displayedSong?.album || "DARK BLOOD"}
                   </div>
                 </div>
-                <div className="w-full max-w-xs">
-                  <div className="relative h-[3px] bg-white/20 rounded-full">
+                <div className="w-full max-w-xs mt-6">
+                  <div className="relative h-[3px] bg-white/20 rounded-full mb-2">
                     <div className="absolute left-0 top-0 h-full w-[35%] bg-[#e4ea04] rounded-full" />
                   </div>
-                  <div className="flex items-center justify-between text-xs text-white font-dm mt-2">
+                  <div className="flex items-center justify-between text-xs text-white font-dm mb-3">
                     <span>00:00</span>
                     <span>2:37</span>
                   </div>
-                  <div className="flex items-center justify-center gap-5 mt-4">
+                  <div className="flex items-center justify-center gap-5">
                     <button type="button" className="text-white/80 hover:text-white">
                       <SkipBack className="h-4 w-4" />
                     </button>
@@ -108,24 +129,49 @@ export const ResultsPanel = ({
                 </div>
               </div>
 
-              <div className="flex-1 space-y-6">
+              <div className="flex-1 space-y-6 ml-8 min-h-[500px]">
                 <div className="flex items-start justify-between gap-6">
                   <div className="w-2/3">
                     <h2 className="text-3xl font-dm font-normal mb-5">The Details</h2>
                     
-                    <div className="flex-col mb-5">
+                      <div className="flex-col mb-5">
                       <div className="text-lg font-dm font-normal mb-2">Genre</div>
-                        <div className="flex gap-2 flex-wrap mt-2">
-                          <Badge className="bg-[#2bb7b1] text-white rounded-full px-4 py-1 font-dm font-normal">Kpop</Badge>
-                          <Badge className="bg-[#7c3aed] text-white rounded-full px-4 py-1 font-dm font-normal">Pop Punk</Badge>
-                          <Badge className="bg-[#34d399] text-white rounded-full px-4 py-1 font-dm font-normal">Emo Pop</Badge>
+                        <div className="flex gap-2 flex-wrap mt-2 min-h-[32px] items-start">
+                          {genres.length > 0 ? (
+                            genres.map((genre, idx) => {
+                              const colors = ["bg-[#2bb7b1]", "bg-[#7c3aed]", "bg-[#34d399]", "bg-[#eab308]", "bg-[#f59e0b]"];
+                              return (
+                                <Badge key={idx} className={`${colors[idx % colors.length]} hover:opacity-90 text-white rounded-full px-4 py-1 font-dm font-normal transition-none`}>
+                                  {genre}
+                                </Badge>
+                              );
+                            })
+                          ) : (
+                            <>
+                              <Badge className="bg-[#2bb7b1] hover:bg-[#2bb7b1] text-white rounded-full px-4 py-1 font-dm font-normal transition-none">Kpop</Badge>
+                              <Badge className="bg-[#7c3aed] hover:bg-[#7c3aed] text-white rounded-full px-4 py-1 font-dm font-normal transition-none">Pop Punk</Badge>
+                            </>
+                          )}
                         </div>
                       </div>
-                      <div>
+                      <div className="mb-5">
                         <div className="text-lg font-dm font-normal mb-2">Mood</div>
-                        <div className="flex gap-2 flex-wrap mt-2">
-                          <Badge className="bg-[#4338ca] text-white rounded-full px-4 py-1 font-dm font-normal">Dark</Badge>
-                          <Badge className="bg-[#b45309] text-white rounded-full px-4 py-1 font-dm font-normal">Suspense</Badge>
+                        <div className="flex gap-2 flex-wrap mt-2 min-h-[32px] items-start">
+                            {moods.length > 0 ? (
+                            moods.map((mood, idx) => {
+                              const colors = ["bg-[#4338ca]", "bg-[#b45309]", "bg-[#059669]", "bg-[#7c2d12]", "bg-[#581c87]"];
+                              return (
+                                <Badge key={idx} className={`${colors[idx % colors.length]} hover:opacity-90 text-white rounded-full px-4 py-1 font-dm font-normal transition-none`}>
+                                  {mood}
+                                </Badge>
+                              );
+                            })
+                          ) : (
+                            <>
+                              <Badge className="bg-[#4338ca] hover:bg-[#4338ca] text-white rounded-full px-4 py-1 font-dm font-normal transition-none">Dark</Badge>
+                              <Badge className="bg-[#b45309] hover:bg-[#b45309] text-white rounded-full px-4 py-1 font-dm font-normal transition-none">Suspense</Badge>
+                            </>
+                          )}
                         </div>
                     </div>
                     
@@ -145,13 +191,13 @@ export const ResultsPanel = ({
                       <br />
                       Tempo: 105 BPM
                       <br />
-                      Duration: 2:38
+                      Duration: {displayedSong?.duration || "2:38"}
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4 text-sm text-white">
-                  <div>
+                  <div className="min-h-[80px]">
                     <div className="text-lg font-dm font-normal mb-2">Collaborators</div>
                     <p className="text-white font-exo">
                       Songwriters: Cirkut, Jason Evigan, David Stewart, Lou-ridz, & Supreme Boi
@@ -162,14 +208,14 @@ export const ResultsPanel = ({
                   </div>
                 </div>
 
-                <div className="items-center gap-3 text-white">
+                <div className="items-center gap-3 text-white min-h-[100px]">
                   <div className="flex italic items-center gap-2 mb-2">
                     <img src="/flower.png" alt="Why" className="h-5 w-5" />
-                    <div className="text-white font-exo text-lg">why this song?</div>
+                    <div className="text-white font-exo text-lg">Why this song?</div>
                   </div>
-                  <div>
+                  <div className="min-h-[60px]">
                     <p className="text-sm text-white font-exo">
-                      “Bite Me” by Enhypen can be used from 00:00-00:35 to represent a
+                      "{displayedSong?.title || "Bite Me"}" by {displayedSong?.artist || "Enhypen"} can be used from 00:00-00:35 to represent a
                       fighter getting ready to go into an intense adventure in the dark
                       and scary woods.
                     </p>
@@ -179,10 +225,20 @@ export const ResultsPanel = ({
             </div>
 
             <div className="rounded-[24px] border border-white/15 bg-[linear-gradient(140deg,rgba(255,255,255,0.08),rgba(0,0,0,0.35))] p-6 mt-3">
-              <div className="text-xl font-dm mb-4">Top 5 Results</div>
+              <div className="text-xl font-dm mb-4">Top 10 Results</div>
               <div className="grid grid-cols-2 gap-5 text-sm text-white">
-                {(searchResults.length > 0 ? searchResults : fallbackSongs).slice(0, 5).map((song, index) => (
-                  <div key={song.id} className="flex items-center gap-3">
+                {songsToDisplay.slice(0, 10).map((song, index) => {
+                  const isSelected = selectedSong?.id === song.id || (!selectedSong && index === 0);
+                  return (
+                  <div 
+                    key={song.id} 
+                    onClick={() => setSelectedSong(song)}
+                    className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition-all duration-200 ${
+                      isSelected 
+                        ? "bg-white/10 ring-2 ring-[#e4ea04]/50 shadow-lg" 
+                        : "hover:bg-white/5"
+                    }`}
+                  >
                     <div className="w-6 text-white font-dm">{index + 1}</div>
                     <div className="h-12 w-12 rounded-md bg-white/10 flex items-center justify-center">
                       <div className="h-7 w-7 rounded-full border border-white/60" />
@@ -225,7 +281,8 @@ export const ResultsPanel = ({
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

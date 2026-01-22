@@ -1,4 +1,4 @@
-import { FormEvent } from "react";
+import { FormEvent, useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
 
@@ -27,7 +27,58 @@ export const ChatPanel = ({
   searchQuery,
   onSearchChange,
   onSubmit,
-}: ChatPanelProps) => (
+}: ChatPanelProps) => {
+  const defaultText = "Updating Brief Instructions...";
+  const [typedText, setTypedText] = useState("");
+  const charIndexRef = useRef(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pauseCountRef = useRef(0);
+
+  useEffect(() => {
+    if (!(isLoading || showResults)) {
+      setTypedText("");
+      charIndexRef.current = 0;
+      pauseCountRef.current = 0;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    const textToType = thinkingText || defaultText;
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(() => {
+      const currentTextToType = thinkingText || defaultText;
+      
+      if (charIndexRef.current < currentTextToType.length) {
+        // Typing forward
+        charIndexRef.current++;
+        setTypedText(currentTextToType.slice(0, charIndexRef.current));
+      } else {
+        // Finished typing, pause briefly then restart
+        pauseCountRef.current++;
+        if (pauseCountRef.current > 30) { // ~1.5 seconds at 50ms intervals
+          charIndexRef.current = 0;
+          setTypedText("");
+          pauseCountRef.current = 0;
+        }
+      }
+    }, 50);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [isLoading, showResults, thinkingText, defaultText]);
+
+  return (
   <section className="w-1/3 min-w-0 flex flex-col bg-[rgba(0,0,0,0.33)] backdrop-blur-[26px] border-r border-white/40 shadow-[inset_0_0_35.4px_rgba(255,255,255,0.15)] h-screen font-exo">
     <div className="flex-1 space-y-5 overflow-y-auto pr-2 px-6 py-8">
       {conversationHistory.map((entry, index) => (
@@ -57,10 +108,11 @@ export const ChatPanel = ({
 
     <div className="pt-4 px-6">
       {(isLoading || showResults) && (
-        <div className="flex items-center gap-3 pb-3 text-white/60 pl-8">
+        <div className="flex items-center h-12 gap-3 pb-3 text-white/60 pl-3">
           <img src="/flower.png" alt="Status" className="h-5 w-5" />
-          <span className="italic">
-            {thinkingText || "Updating Brief Instructions..."}
+          <span className="italic text-sm">
+            {typedText}
+            <span className="animate-pulse">|</span>
           </span>
         </div>
       )}
@@ -88,4 +140,5 @@ export const ChatPanel = ({
       </p>
     </div>
   </section>
-);
+  );
+};
