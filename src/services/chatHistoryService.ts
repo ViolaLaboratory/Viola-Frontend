@@ -16,6 +16,15 @@ export interface ChatSession {
     message: string;
   }>;
   resultCount: number;           // Number of tracks found
+  searchResults?: Array<{        // Saved search results to restore
+    id: number;
+    title: string;
+    artist: string;
+    album: string;
+    keywords: string[];
+    duration: string;
+  }>;
+  selectedSongId?: number;        // ID of the currently selected song in details view
   createdAt: number;             // Timestamp (Date.now())
   updatedAt: number;             // Timestamp (Date.now())
 }

@@ -7,6 +7,14 @@ export interface Folder {
   id: string;
   name: string;
   trackIds: string[]; // Array of track IDs
+  trackCache?: Record<string, { // Cache of track information by track ID
+    id: number;
+    title: string;
+    artist: string;
+    album: string;
+    duration: string;
+    thumbnail?: string;
+  }>;
   createdAt: number;
   updatedAt: number;
 }
@@ -119,14 +127,28 @@ export const updateFolderName = (id: string, name: string): void => {
 
 /**
  * Add track IDs to a folder
+ * @param trackCache - Optional cache of track information to store with the track IDs
  */
-export const addTracksToFolder = (folderId: string, trackIds: string[]): void => {
+export const addTracksToFolder = (
+  folderId: string, 
+  trackIds: string[], 
+  trackCache?: Record<string, { id: number; title: string; artist: string; album: string; duration: string; thumbnail?: string }>
+): void => {
   const folders = getFolders();
   const folder = folders.find(f => f.id === folderId);
   if (folder) {
     // Add track IDs that don't already exist
     const newTrackIds = trackIds.filter(id => !folder.trackIds.includes(id));
     folder.trackIds = [...folder.trackIds, ...newTrackIds];
+    
+    // Merge track cache if provided
+    if (trackCache) {
+      if (!folder.trackCache) {
+        folder.trackCache = {};
+      }
+      folder.trackCache = { ...folder.trackCache, ...trackCache };
+    }
+    
     folder.updatedAt = Date.now();
     saveFolders(folders);
   }

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { ArrowUp, Play, Plus, Minus, Loader2 } from "lucide-react";
+import { ArrowUp, Play, Pause, Plus, Minus, Loader2, SkipBack, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import API_ENDPOINTS from "@/config/api";
+import { useMusicPlayer, type Song as MusicPlayerSong } from "@/contexts/MusicPlayerContext";
 
 interface Song {
   id: number;
@@ -408,6 +409,41 @@ export const MusicCatalog = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [expandedSongId, setExpandedSongId] = useState<number | null>(null);
   const pageSize = 30; // Show 30 songs per page in the catalog
+  
+  /* Music Player Integration */
+  const { 
+    currentSong, 
+    isPlaying, 
+    currentTime, 
+    duration, 
+    togglePlayPause, 
+    nextTrack, 
+    previousTrack, 
+    seekTo,
+    loadSong 
+  } = useMusicPlayer();
+
+  // Format time helper
+  const formatTime = (seconds: number): string => {
+    if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Calculate progress percentage
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Handle progress bar click
+  const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!duration) return;
+    const progressBar = e.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = percentage * duration;
+    seekTo(newTime);
+  };
 
   // Load songs from MongoDB backend API with pagination
   const loadSongsFromBackend = useCallback(async (page: number = 1) => {
@@ -554,10 +590,38 @@ export const MusicCatalog = () => {
                   const rowId = song.id || index + 1;
                   const isExpanded = expandedSongId === rowId;
 
+                  const handleSongClick = () => {
+                    // Convert Song to MusicPlayerSong format
+                    const musicPlayerSong: MusicPlayerSong = {
+                      id: song.id,
+                      title: song.title,
+                      artist: song.artist,
+                      album: song.album,
+                      duration: song.duration,
+                      keywords: song.genre ? [song.genre] : [],
+                      thumbnail: song.thumbnail,
+                    };
+                    
+                    // Create queue from all songs on current page
+                    const queue: MusicPlayerSong[] = songs.map(s => ({
+                      id: s.id,
+                      title: s.title,
+                      artist: s.artist,
+                      album: s.album,
+                      duration: s.duration,
+                      keywords: s.genre ? [s.genre] : [],
+                      thumbnail: s.thumbnail,
+                    }));
+                    
+                    // Load the selected song with the queue (but don't auto-play)
+                    loadSong(musicPlayerSong, queue);
+                  };
+
                   return (
                     <div
                       key={rowId}
-                      className="rounded-xl border border-white/20 bg-black/40 px-4 py-3 shadow-[0_0_22px_rgba(0,0,0,0.35)] transition"
+                      className="rounded-xl border border-white/20 bg-black/40 px-4 py-3 shadow-[0_0_22px_rgba(0,0,0,0.35)] transition cursor-pointer hover:bg-white/5"
+                      onClick={handleSongClick}
                     >
                       <div className="grid grid-cols-[60px_90px_1fr_1fr_1fr_140px_140px_120px_120px] gap-2 items-center">
                         <div className="text-white/80 font-dm">
@@ -576,9 +640,10 @@ export const MusicCatalog = () => {
                           <span>{isExpanded ? "Collapse" : "See more..."}</span>
                           <button
                             type="button"
-                            onClick={() =>
-                              setExpandedSongId(isExpanded ? null : rowId)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent song click when clicking expand button
+                              setExpandedSongId(isExpanded ? null : rowId);
+                            }}
                             className="h-6 w-6 rounded-full bg-white text-black flex items-center justify-center"
                             aria-label="Toggle details"
                           >
@@ -682,27 +747,77 @@ export const MusicCatalog = () => {
               <div className="mt-6 rounded-xl border border-white/15 bg-black/50 px-6 py-3 shadow-[0_0_18px_rgba(0,0,0,0.35)]">
                 <div className="flex items-center justify-between gap-6">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded bg-white/10 flex items-center justify-center">
-                      🎵
+                    <div className="h-12 w-12 rounded bg-white/10 flex items-center justify-center overflow-hidden">
+                      {currentSong?.thumbnail && currentSong.thumbnail !== "🎵" ? (
+                        <img 
+                          src={currentSong.thumbnail} 
+                          alt="Album art" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <img 
+                          src="/NoteAlbumArt.png" 
+                          alt="Album art" 
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
                     <div>
-                      <div className="text-white">Song Title</div>
-                      <div className="text-white/60 text-sm">Artist Name</div>
-                      <div className="text-white/60 text-sm">Album Name</div>
+                      <div className="text-white font-dm">{currentSong?.title || "Song Title"}</div>
+                      <div className="text-white/60 text-sm font-exo">{currentSong?.artist || "Artist Name"}</div>
+                      <div className="text-white/60 text-sm font-exo">{currentSong?.album || "Album Name"}</div>
                     </div>
                   </div>
                   <div className="flex-1 px-6">
-                    <div className="relative h-[3px] bg-white/20 rounded-full">
-                      <div className="absolute left-0 top-0 h-full w-[35%] bg-white rounded-full" />
+                    <div 
+                      className="relative h-[3px] bg-white/20 rounded-full cursor-pointer group"
+                      onClick={currentSong ? handleProgressBarClick : undefined}
+                      title={currentSong ? "Click to seek" : undefined}
+                    >
+                      <div 
+                        className="absolute left-0 top-0 h-full bg-white rounded-full transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      />
+                      {currentSong && (
+                        <div className="absolute inset-0 rounded-full group-hover:bg-white/10 transition-colors" />
+                      )}
                     </div>
                     <div className="flex items-center justify-between text-xs text-white/60 mt-2 font-dm">
-                      <span>00:00</span>
-                      <span>2:37</span>
+                      <span>{currentSong ? formatTime(currentTime) : "00:00"}</span>
+                      <span>{currentSong ? (formatTime(duration) || currentSong.duration || "0:00") : "2:37"}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <button type="button" className="h-9 w-9 rounded-full border border-white/40">
-                      <Play className="h-4 w-4" />
+                  <div className="flex items-center gap-2">
+                    <button 
+                      type="button" 
+                      className="h-9 w-9 rounded-full border border-white/40 flex items-center justify-center hover:bg-white/10 transition-colors text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                      onClick={previousTrack}
+                      disabled={!currentSong}
+                      aria-label="Previous track"
+                    >
+                      <SkipBack className="h-4 w-4" />
+                    </button>
+                    <button 
+                      type="button" 
+                      className="h-9 w-9 rounded-full border border-white/40 flex items-center justify-center hover:bg-white/10 transition-colors text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                      onClick={togglePlayPause}
+                      disabled={!currentSong}
+                      aria-label={isPlaying ? "Pause" : "Play"}
+                    >
+                      {isPlaying ? (
+                        <Pause className="h-4 w-4" fill="currentColor" />
+                      ) : (
+                        <Play className="h-4 w-4" fill="currentColor" />
+                      )}
+                    </button>
+                    <button 
+                      type="button" 
+                      className="h-9 w-9 rounded-full border border-white/40 flex items-center justify-center hover:bg-white/10 transition-colors text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                      onClick={nextTrack}
+                      disabled={!currentSong}
+                      aria-label="Next track"
+                    >
+                      <SkipForward className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

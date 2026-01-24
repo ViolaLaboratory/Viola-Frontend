@@ -73,12 +73,7 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({ childr
       });
       
       audioRef.current.addEventListener('loadedmetadata', () => {
-        const newDuration = audioRef.current?.duration || 0;
-        setDuration(newDuration);
-        // Update the current song's duration if we have a current song
-        if (currentSong && newDuration > 0) {
-          // This will be handled by the component that uses this context
-        }
+        setDuration(audioRef.current?.duration || 0);
       });
       
       audioRef.current.addEventListener('ended', () => {

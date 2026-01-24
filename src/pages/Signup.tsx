@@ -74,14 +74,6 @@ const Signup = () => {
         body: JSON.stringify({ email }),
       });
 
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('Non-JSON response:', text.substring(0, 200));
-        throw new Error('Server returned an error. Please make sure the backend server is running and migrations are complete.');
-      }
-
       const data = await response.json();
 
       if (!response.ok) {
@@ -96,12 +88,7 @@ const Signup = () => {
         console.log('Verification code (dev mode):', data.code);
       }
     } catch (err) {
-      if (err instanceof SyntaxError) {
-        setError('Server error: Backend may not be running or migrations need to be run. Check the console for details.');
-        console.error('JSON parse error - server likely returned HTML:', err);
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to send verification code');
-      }
+      setError(err instanceof Error ? err.message : 'Failed to send verification code');
     } finally {
       setIsLoading(false);
     }

@@ -82,51 +82,6 @@ const mockSongs: Song[] = [
     keywords: ["Darkwave", "Ethereal", "Cold", "Electronic"],
     duration: "03:58",
   },
-  {
-    id: 6,
-    title: "Shadow Work",
-    artist: "Nyx Collective",
-    album: "Nocturnal Bloom",
-
-    keywords: ["Mysterious", "Hypnotic", "Minimal", "Deep"],
-    duration: "04:22",
-  },
-  {
-    id: 7,
-    title: "Crimson Hour",
-    artist: "Scarlet Waves",
-    album: "Afterglow",
-
-    keywords: ["Melancholic", "Atmospheric", "Emotional", "Cinematic"],
-    duration: "03:45",
-  },
-  {
-    id: 8,
-    title: "Void Walker",
-    artist: "Echo Chamber",
-    album: "Infinite Silence",
-
-    keywords: ["Ambient", "Dark", "Expansive", "Meditative"],
-    duration: "05:12",
-  },
-  {
-    id: 9,
-    title: "Phantom Strings",
-    artist: "String Theory",
-    album: "Resonance",
-
-    keywords: ["Orchestral", "Tense", "Building", "Dramatic"],
-    duration: "03:28",
-  },
-  {
-    id: 10,
-    title: "Neon Grave",
-    artist: "Cyber Elegy",
-    album: "Digital Requiem",
-
-    keywords: ["Synthwave", "Retro", "Nostalgic", "Melancholic"],
-    duration: "04:01",
-  },
 ];
 
 const typingPhrases = [
@@ -166,7 +121,7 @@ export const SearchInterface = () => {
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   
   /* Music Player Integration */
-  const { loadSong, isPlaying: playerIsPlaying, togglePlayPause, currentSong } = useMusicPlayer();
+  const { loadSong, isPlaying: playerIsPlaying, togglePlayPause, currentSong, clearQueue } = useMusicPlayer();
 
   /* STATE: Chat session management */
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -192,6 +147,8 @@ export const SearchInterface = () => {
       if (savedSession) {
         // Restore chat session from history
         setCurrentChatSessionId(urlSessionId);
+        // Store current chat session ID for restoration when navigating back
+        localStorage.setItem("viola_current_chat_session_id", urlSessionId);
         setSessionId(savedSession.sessionId);
         setConversationHistory(savedSession.conversationHistory);
         setChatMessage(
@@ -202,8 +159,70 @@ export const SearchInterface = () => {
         setHasSearched(true);
         setIsFirstMessage(false);
 
-        // Note: Results are not persisted in localStorage, so we don't restore them
-        // User will see the conversation but may need to re-run search if they want results
+        // Restore search results if available
+        if (savedSession.searchResults && savedSession.searchResults.length > 0) {
+          setSearchResults(savedSession.searchResults);
+          setShowResults(true);
+          setHasSearched(true); // Ensure hasSearched is true to show results
+          setIsLoading(false); // Ensure loading is false to show results
+          setWaitingForResponse(false); // Ensure waiting state is cleared
+          
+          // Restore selected song if available, otherwise select first song
+          if (savedSession.selectedSongId) {
+            const restoredSong = savedSession.searchResults.find(
+              song => song.id === savedSession.selectedSongId
+            );
+            if (restoredSong) {
+              setSelectedSong(restoredSong);
+              // Load the song into the music player (without playing)
+              const musicPlayerSong = {
+                id: restoredSong.id,
+                title: restoredSong.title,
+                artist: restoredSong.artist,
+                album: restoredSong.album,
+                duration: restoredSong.duration,
+                keywords: restoredSong.keywords,
+              };
+              const queue = savedSession.searchResults.map(s => ({
+                id: s.id,
+                title: s.title,
+                artist: s.artist,
+                album: s.album,
+                duration: s.duration,
+                keywords: s.keywords,
+              }));
+              loadSong(musicPlayerSong, queue);
+            }
+          } else if (savedSession.searchResults.length > 0) {
+            // If no selected song, select the first one to show details
+            const firstSong = savedSession.searchResults[0];
+            setSelectedSong(firstSong);
+            // Load the first song into the music player (without playing)
+            const musicPlayerSong = {
+              id: firstSong.id,
+              title: firstSong.title,
+              artist: firstSong.artist,
+              album: firstSong.album,
+              duration: firstSong.duration,
+              keywords: firstSong.keywords,
+            };
+            const queue = savedSession.searchResults.map(s => ({
+              id: s.id,
+              title: s.title,
+              artist: s.artist,
+              album: s.album,
+              duration: s.duration,
+              keywords: s.keywords,
+            }));
+            loadSong(musicPlayerSong, queue);
+          }
+        } else {
+          // Even if no search results, ensure showResults is false and loading is false
+          setShowResults(false);
+          setIsLoading(false);
+          setWaitingForResponse(false);
+        }
+
         toast({
           title: "Chat session resumed",
           description: `Conversation: "${savedSession.title}"`,
@@ -244,26 +263,151 @@ export const SearchInterface = () => {
         }
       }, 100);
     }
-    // CASE 3: Regular new session
+    // CASE 3: Regular new session or returning to Search page
     else {
-      const storedSessionId = localStorage.getItem("viola_session_id");
-      if (storedSessionId) {
-        setSessionId(storedSessionId);
-      } else {
-        const newSessionId = crypto.randomUUID();
-        localStorage.setItem("viola_session_id", newSessionId);
-        setSessionId(newSessionId);
-      }
+      // Check if we have a current chat session ID to restore
+      const storedChatSessionId = localStorage.getItem("viola_current_chat_session_id");
+      if (storedChatSessionId) {
+        const savedSession = getChatSessionById(storedChatSessionId);
+        if (savedSession) {
+          // Restore the current session
+          setCurrentChatSessionId(storedChatSessionId);
+          setSessionId(savedSession.sessionId);
+          setConversationHistory(savedSession.conversationHistory);
+          setChatMessage(
+            savedSession.conversationHistory[
+              savedSession.conversationHistory.length - 1
+            ]?.message || "Session resumed"
+          );
+          setHasSearched(true);
+          setIsFirstMessage(false);
 
-      // Set default welcome message
-      setChatMessage(
-        "Hi! Tell me what kind of music you'd like, and I'll help you find the perfect tracks."
-      );
+          // Restore search results if available
+          if (savedSession.searchResults && savedSession.searchResults.length > 0) {
+            setSearchResults(savedSession.searchResults);
+            setShowResults(true);
+            setIsLoading(false);
+            setWaitingForResponse(false);
+            setHasSearched(true);
+            
+            // Restore selected song if available, otherwise select first song
+            if (savedSession.selectedSongId) {
+              const restoredSong = savedSession.searchResults.find(
+                song => song.id === savedSession.selectedSongId
+              );
+              if (restoredSong) {
+                setSelectedSong(restoredSong);
+                // Load the song into the music player (without playing)
+                const musicPlayerSong = {
+                  id: restoredSong.id,
+                  title: restoredSong.title,
+                  artist: restoredSong.artist,
+                  album: restoredSong.album,
+                  duration: restoredSong.duration,
+                  keywords: restoredSong.keywords,
+                };
+                const queue = savedSession.searchResults.map(s => ({
+                  id: s.id,
+                  title: s.title,
+                  artist: s.artist,
+                  album: s.album,
+                  duration: s.duration,
+                  keywords: s.keywords,
+                }));
+                loadSong(musicPlayerSong, queue);
+              }
+            } else if (savedSession.searchResults.length > 0) {
+              // If no selected song, select the first one to show details
+              const firstSong = savedSession.searchResults[0];
+              setSelectedSong(firstSong);
+              // Load the first song into the music player (without playing)
+              const musicPlayerSong = {
+                id: firstSong.id,
+                title: firstSong.title,
+                artist: firstSong.artist,
+                album: firstSong.album,
+                duration: firstSong.duration,
+                keywords: firstSong.keywords,
+              };
+              const queue = savedSession.searchResults.map(s => ({
+                id: s.id,
+                title: s.title,
+                artist: s.artist,
+                album: s.album,
+                duration: s.duration,
+                keywords: s.keywords,
+              }));
+              loadSong(musicPlayerSong, queue);
+            }
+          } else {
+            // Even if no search results, ensure showResults is false and loading is false
+            setShowResults(false);
+            setIsLoading(false);
+            setWaitingForResponse(false);
+          }
+        } else {
+          // Session not found, start fresh
+          const storedSessionId = localStorage.getItem("viola_session_id");
+          if (storedSessionId) {
+            setSessionId(storedSessionId);
+          } else {
+            const newSessionId = crypto.randomUUID();
+            localStorage.setItem("viola_session_id", newSessionId);
+            setSessionId(newSessionId);
+          }
+          setChatMessage(
+            "Hi! Tell me what kind of music you'd like, and I'll help you find the perfect tracks."
+          );
+        }
+      } else {
+        // No current session, start fresh
+        const storedSessionId = localStorage.getItem("viola_session_id");
+        if (storedSessionId) {
+          setSessionId(storedSessionId);
+        } else {
+          const newSessionId = crypto.randomUUID();
+          localStorage.setItem("viola_session_id", newSessionId);
+          setSessionId(newSessionId);
+        }
+        setChatMessage(
+          "Hi! Tell me what kind of music you'd like, and I'll help you find the perfect tracks."
+        );
+      }
     }
 
     // Load folders
     setFolders(getFolders());
-  }, [urlSessionId, location.state]); // Re-run if URL session ID or location state changes
+  }, [urlSessionId, location.state, location.pathname]); // Re-run if URL session ID, location state, or pathname changes
+
+  /* EFFECT: Handle reset when Search button is clicked twice */
+  useEffect(() => {
+    // Check if we should reset (from location.state.reset flag)
+    if (location.state?.reset === true && !urlSessionId) {
+      // Reset all chat panel state
+      setSearchQuery("");
+      setConversationHistory([]);
+      setSearchResults([]);
+      setShowResults(false);
+      setSelectedSong(null);
+      setCurrentChatSessionId(null);
+      setHasSearched(false);
+      setIsFirstMessage(true);
+      setIsLoading(false);
+      setWaitingForResponse(false);
+      setChatMessage(
+        "Hi! Tell me what kind of music you'd like, and I'll help you find the perfect tracks."
+      );
+      
+      // Clear current chat session ID
+      localStorage.removeItem("viola_current_chat_session_id");
+      
+      // Clear the reset flag from location state
+      navigate(location.pathname, { replace: true, state: {} });
+      
+      // Clear music player
+      clearQueue();
+    }
+  }, [location.state?.reset, urlSessionId, navigate, clearQueue, location.pathname]);
 
   // Fetch track details from MongoDB (falls back to ChromaDB)
   const fetchTrackDetails = async (trackIds: string[]): Promise<Song[]> => {
@@ -295,6 +439,14 @@ export const SearchInterface = () => {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim() || !sessionId) return;
+
+    // Clear previous search results when starting a new search
+    setSearchResults([]);
+    setShowResults(false);
+    setConversationHistory([]);
+    setCurrentChatSessionId(null);
+    // Clear current chat session ID when starting a new search
+    localStorage.removeItem("viola_current_chat_session_id");
 
     setIsLoading(true);
     setHasSearched(true);
@@ -357,7 +509,7 @@ export const SearchInterface = () => {
           artist: track.artist || "Unknown Artist",
           album: track.album || "Unknown Album",
           keywords: [track.genre || "Music"],
-          duration: track.duration || "03:00", // Backend should already format this as MM:SS
+          duration: track.duration || "03:00",
         }));
 
         setSearchResults(songs);
@@ -374,6 +526,8 @@ export const SearchInterface = () => {
         // Generate chat session ID if we don't have one yet
         const chatSessionId = currentChatSessionId || crypto.randomUUID();
         setCurrentChatSessionId(chatSessionId);
+        // Store current chat session ID for restoration when navigating back
+        localStorage.setItem("viola_current_chat_session_id", chatSessionId);
 
         // Extract title from first user message (truncate to 50 chars)
         const firstUserMessage =
@@ -384,7 +538,10 @@ export const SearchInterface = () => {
             ? firstUserMessage.slice(0, 50) + "..."
             : firstUserMessage;
 
-        // Save to chat history
+        // Get existing session to preserve selectedSongId if updating
+        const existingSession = currentChatSessionId ? getChatSessionById(currentChatSessionId) : null;
+        
+        // Save to chat history with search results and selected song
         saveChatSession({
           id: chatSessionId,
           title: title,
@@ -392,7 +549,9 @@ export const SearchInterface = () => {
           sessionId: data.session_id,
           conversationHistory: updatedHistory,
           resultCount: songs.length,
-          createdAt: currentChatSessionId ? Date.now() : Date.now(), // Keep original if updating
+          searchResults: songs, // Save search results for restoration
+          selectedSongId: selectedSong?.id || existingSession?.selectedSongId, // Preserve selected song
+          createdAt: existingSession?.createdAt || Date.now(), // Keep original creation time if updating
           updatedAt: Date.now(),
         });
 
@@ -568,7 +727,7 @@ export const SearchInterface = () => {
       keywords: s.keywords,
     }));
     
-    // Load the selected song with the queue (but don't auto-play)
+    // Load the selected song with the queue (but don't auto-play - user must click play)
     loadSong(musicPlayerSong, queue);
     setSelectedSong(song);
   };

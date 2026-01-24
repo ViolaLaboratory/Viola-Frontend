@@ -9,7 +9,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Folder, ListMusic, PanelLeft, Wrench, Trash2 } from "lucide-react";
+import { ListMusic, PanelLeft, Wrench, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ContextMenu,
@@ -51,12 +51,6 @@ const NAV_ITEMS = [
     iconType: "image",
     iconSrc: "/flower.png",
     path: "/demo/search",
-  },
-  {
-    id: "playlists",
-    label: "Playlists",
-    icon: Folder,
-    path: "/demo/playlists",
   },
   {
     id: "pitchKit",
@@ -110,7 +104,12 @@ export const Sidebar = () => {
 
   /* HANDLER: Navigate to specific page */
   const handleNavClick = (path: string) => {
-    navigate(path);
+    // If clicking Search button while already on Search page, reset the chat panel
+    if (path === '/demo/search' && location.pathname.startsWith('/demo/search')) {
+      navigate('/demo/search', { state: { reset: true }, replace: true });
+    } else {
+      navigate(path);
+    }
   };
 
   /* HANDLER: Resume chat session */
@@ -204,7 +203,7 @@ export const Sidebar = () => {
         </button>
       </div>
 
-      {/* MAIN NAVIGATION: Search, Playlists, Pitch Kit, Catalog */}
+      {/* MAIN NAVIGATION: Search, Pitch Kit, Catalog */}
       <nav
         className={`
           px-2 py-2

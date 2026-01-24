@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
   // Django Backend APIs
   WAITLIST_SUBMIT: `${API_BASE_URL}/waitlist/submit/`,
   TRACK_DETAILS: (trackId: string) => `${API_BASE_URL}/music/tracks/${trackId}/`,
+  TRACK_AUDIO: (trackId: string) => `${API_BASE_URL}/music/tracks/${trackId}/audio/`,
   SONGS_LIST: (page?: number, limit?: number) => {
     const params = new URLSearchParams();
     if (page) params.set('page', page.toString());
