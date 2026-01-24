@@ -446,10 +446,9 @@ const Landing = () => {
           {/* Content */}
           <div className="relative z-10 px-6 md:px-12 py-12 md:py-16 lg:py-20 text-center space-y-3 md:space-y-4">
             <p className="uppercase tracking-[0.25em] text-xs">Locate · Listen · License</p>
-            <h2 className="font-zen font-semibold text-3xl md:text-4xl lg:text-5xl leading-tight max-w-5xl mx-auto">
-              From <span className="italic">"I'll Know It When I Hear It"</span>
+            <h2 className="font-zen font-semibold text-2xl md:text-3xl lg:text-4xl leading-tight max-w-5xl mx-auto">
+              From <span className="italic">"I'll Know It When I Hear It"</span> to Easily Pitched.
               <br className="hidden md:block" />
-              <span className="md:inline block mt-2 md:mt-0 font-dm">to Easily Pitched.</span>
               <br className="hidden md:block" />
               <span className="md:inline block mt-2 md:mt-0 font-dm">All Done in One Place.</span>
             </h2>
@@ -494,8 +493,8 @@ const Landing = () => {
                 <BrainCircuit className="w-4 h-4" />
                 <span className="text-sm font-medium">AI Search</span>
               </div>
-              <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white leading-tight" style={{ whiteSpace: 'pre-line' }}>
-                Find the Perfect{'\n'}Track in Seconds
+              <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
+                Find the Perfect Track in Seconds
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
               Type what you would say in your natural language: "dark and eerie songs where the lead girl and boy are being chased in the woods, subtle vocal, 130 bpm, no explicit lyrics." Viola understands the mood, genre, tempo, reference, and story context. No more blind metadata  keyword filtering and guessing, or endless scroll. Just say what you need, and Viola pulls the right tracks that actually feels right to you.
@@ -586,8 +585,8 @@ const Landing = () => {
                 <CloudUpload className="w-4 h-4" />
                 <span className="text-sm font-medium">Catalog Viewer</span>
               </div>
-              <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white leading-tight" style={{ whiteSpace: 'pre-line' }}>
-                Clear Tracks{'\n'}Faster Than Ever
+              <h2 className="font-zen text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
+                Clear Tracks Faster than Ever
               </h2>
               <p className="text-base md:text-lg text-white/80 mb-4">
               Drag and drop all your songs, and have it all in one place. See metadata, mood, and licensing status at a glance. Having the catalog integrated with the smart catalog search engine and pitch kit builder, Viola streamlines the music sync process in one workspace. 
@@ -687,7 +686,7 @@ const Landing = () => {
                 </li>
                 <li className="flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#e4ea04]" />
-                  <span>Record Label or Publishing Company Team </span>
+                  <span>Record Label or Publishing Company Team Player </span>
                 </li>
               </ul>
             </div>
@@ -713,17 +712,13 @@ const Landing = () => {
           </div>
 
           <p className="text-white font-dm text-center text-2xl text-center px-12 lg:px-32">
-            Viola doesn’t replace your ear. It gives you a better easel, better paints, and a cleaner studio to work in.
+            Viola doesn't replace your ear. It gives you a better easel, better paints, and a cleaner studio to work in.
           </p>
-          <div className="w-full ">
-            <img src="paintSupplies.png" alt="" className="h-1/3 px-24 brightness-[2] saturate-200 place-self-center"/>
-
-          </div>
         </div>
       </section>
 
 {/* Why / Trust */}
-      <section className="px-6 py-16 md:py-20 bg-[#EE481F] rounded-none md:rounded-full shadow-[0_0_80px_rgba(238,72,31,0.55)]">
+      <section className="px-6 py-16 md:py-20 border border-white/10 rounded-2xl">
         <div className="max-w-4xl mx-auto space-y-4 text-center">
           <p className="uppercase tracking-[0.2em] text-white font-dm text-xs">Why Viola</p>
           <h2 className="text-4xl md:text-7xl font-zen font-semibold text-white pb-6 px-8">AI that assists your ear, not replaces it.</h2>
@@ -783,7 +778,7 @@ const Landing = () => {
             {/* Tagline - only visible when not searched */}
             {!hasSearched && (
               <p className="text-center text-white/70 text-sm mt-4 tracking-wide">
-                locate, listen, license.
+                Locate, Listen, License.
               </p>
             )}
           </form>
@@ -857,8 +852,12 @@ const Landing = () => {
             <Accordion type="single" collapsible className="space-y-3">
               {[
                 {
-                  q: "Are you replacing music supervisors?",
-                  a: "No. Viola is a workflow tool for people whose full-time job is taste and judgment. It helps you find, sort, and clear faster. You decide what’s right for the project."
+                  q: "Are you replacing sync agents, sync managers, and music supervisors?",
+                  a: "No. Viola is a workflow tool for people whose full-time job is taste and judgment. It helps you find, sort, and clear faster. You decide what's right for the project."
+                },
+                {
+                  q: "Who's Viola intended for?",
+                  a: "Viola is intended for users who work in sync and music supervisors to improve their workflow efficiency and make more informed decisions."
                 },
                 {
                   q: "Do we have to move our whole catalog into Viola?",

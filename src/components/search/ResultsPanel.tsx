@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,8 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Pause, Play, Plus, SkipBack, SkipForward } from "lucide-react";
-import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
-import { useEffect, useState } from "react";
 
 const formatTime = (seconds: number): string => {
   if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
@@ -34,8 +33,6 @@ interface ResultsPanelProps {
   onTogglePlay: () => void;
   searchResults: Song[];
   fallbackSongs: Song[];
-  selectedSong?: Song | null;
-  onSongClick?: (song: Song) => void;
 }
 
 export const ResultsPanel = ({
@@ -46,121 +43,127 @@ export const ResultsPanel = ({
   onTogglePlay,
   searchResults,
   fallbackSongs,
-  selectedSong,
-  onSongClick,
 }: ResultsPanelProps) => {
-  const { currentSong, currentTime, duration, nextTrack, previousTrack, seekTo, playSong } = useMusicPlayer();
-  const [progress, setProgress] = useState(0);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [songDurations, setSongDurations] = useState<Record<number, string>>({});
 
-  useEffect(() => {
-    if (duration > 0) {
-      setProgress((currentTime / duration) * 100);
-    }
-  }, [currentTime, duration]);
+  // Default to first song if no selection yet
+  const displayedSong =
+    selectedSong || (searchResults.length > 0 ? searchResults[0] : fallbackSongs[0]);
+  const songsToDisplay = searchResults.length > 0 ? searchResults : fallbackSongs;
 
-  // Update song duration when audio metadata loads
+  // Preload audio metadata for durations (top 10)
   useEffect(() => {
-    if (currentSong && duration > 0) {
-      const minutes = Math.floor(duration / 60);
-      const seconds = Math.floor(duration % 60);
-      const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-      
-      setSongDurations(prev => ({
-        ...prev,
-        [currentSong.id]: formattedDuration,
-      }));
-    }
-  }, [currentSong, duration]);
+    const songsToPreload = songsToDisplay.slice(0, 10);
 
-  // Preload audio metadata for all songs in results to get actual durations
-  useEffect(() => {
-    const allSongs = searchResults.length > 0 ? searchResults : fallbackSongs;
-    const songsToPreload = allSongs.slice(0, 5); // Preload top 5 results
-    
     songsToPreload.forEach((song) => {
-      // Skip if we already have the duration
-      if (songDurations[song.id] || !song.id) return;
-      
-      // Create a temporary audio element to load metadata
+      if (!song?.id) return;
+      if (songDurations[song.id]) return;
+
       const audio = new Audio();
-      const audioUrl = `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${song.id % 10 + 1}.mp3`;
-      
-      audio.addEventListener('loadedmetadata', () => {
-        const actualDuration = audio.duration;
-        if (actualDuration > 0) {
-          const minutes = Math.floor(actualDuration / 60);
-          const seconds = Math.floor(actualDuration % 60);
-          const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-          
-          setSongDurations(prev => ({
+      const audioUrl = `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${
+        (song.id % 10) + 1
+      }.mp3`;
+
+      const onLoaded = () => {
+        const d = audio.duration;
+        if (d > 0) {
+          const minutes = Math.floor(d / 60);
+          const seconds = Math.floor(d % 60);
+          const formatted = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+          setSongDurations((prev) => ({
             ...prev,
-            [song.id]: formattedDuration,
+            [song.id]: formatted,
           }));
         }
-        // Clean up
-        audio.src = '';
+        cleanup();
+      };
+
+      const onError = () => cleanup();
+
+      const cleanup = () => {
+        audio.removeEventListener("loadedmetadata", onLoaded);
+        audio.removeEventListener("error", onError);
+        audio.src = "";
         audio.load();
-      });
-      
-      audio.addEventListener('error', () => {
-        // If audio fails to load, keep the API duration
-        audio.src = '';
-        audio.load();
-      });
-      
-      // Set src to trigger metadata load
+      };
+
+      audio.addEventListener("loadedmetadata", onLoaded);
+      audio.addEventListener("error", onError);
+
       audio.src = audioUrl;
       audio.load();
     });
-  }, [searchResults, fallbackSongs]); // Run when results change
-
-  // Use selectedSong if provided, otherwise use first result
-  const displaySong = selectedSong || (searchResults.length > 0 ? searchResults[0] : fallbackSongs[0]);
-
-  const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!duration) return;
-    
-    const progressBar = e.currentTarget;
-    const rect = progressBar.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percentage = clickX / rect.width;
-    const newTime = percentage * duration;
-    
-    seekTo(newTime);
-  };
-
-  const handlePlayPause = () => {
-    // If no song is loaded, load the current display song first
-    if (!currentSong && displaySong) {
-      const allSongs = searchResults.length > 0 ? searchResults : fallbackSongs;
-      const queue = allSongs.map(s => ({
-        id: s.id,
-        title: s.title,
-        artist: s.artist,
-        album: s.album,
-        duration: s.duration,
-        keywords: s.keywords,
-      }));
-      
-      const songToPlay = {
-        id: displaySong.id,
-        title: displaySong.title,
-        artist: displaySong.artist,
-        album: displaySong.album,
-        duration: displaySong.duration,
-        keywords: displaySong.keywords,
-      };
-      
-      playSong(songToPlay, queue);
-    } else {
-      onTogglePlay();
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [songsToDisplay]);
 
   if (!isLoading && !showResults) {
     return null;
   }
+
+  // Helper to split keywords into genres and moods (simple heuristic)
+  const getGenresAndMoods = (keywords: string[]) => {
+    const genreKeywords = [
+      "Kpop",
+      "Pop",
+      "Pop Punk",
+      "Emo Pop",
+      "R&B",
+      "Hip Hop",
+      "Electronic",
+      "EDM",
+      "Indie",
+      "Rock",
+      "Synthwave",
+      "Alternative",
+      "Ambient",
+      "Darkwave",
+      "Orchestral",
+      "Cinematic",
+    ];
+    const moodKeywords = [
+      "Dark",
+      "Suspense",
+      "Eerie",
+      "Suspenseful",
+      "Atmospheric",
+      "Horror",
+      "Tension",
+      "Mysterious",
+      "Haunting",
+      "Ethereal",
+      "Cold",
+      "Hypnotic",
+      "Minimal",
+      "Deep",
+      "Melancholic",
+      "Emotional",
+      "Expansive",
+      "Meditative",
+      "Tense",
+      "Building",
+      "Dramatic",
+      "Retro",
+      "Nostalgic",
+    ];
+
+    const genres = keywords.filter((k) => genreKeywords.some((g) => k.includes(g) || g.includes(k)));
+    const moods = keywords.filter((k) => moodKeywords.some((m) => k.includes(m) || m.includes(k)));
+
+    const finalGenres = genres.length > 0 ? genres : keywords.slice(0, 3);
+    const finalMoods = moods.length > 0 ? moods : keywords.slice(3).length ? keywords.slice(3) : keywords.slice(0, 2);
+
+    return { genres: finalGenres, moods: finalMoods };
+  };
+
+  const { genres, moods } = displayedSong
+    ? getGenresAndMoods(displayedSong.keywords || [])
+    : { genres: [], moods: [] };
+
+  const handlePlayPause = () => {
+    onTogglePlay();
+  };
 
   return (
     <section className="w-2/3 p-8 h-screen overflow-y-auto font-exo text-white mt-3 z-5">
@@ -170,7 +173,6 @@ export const ResultsPanel = ({
             <div className="text-xs tracking-[0.3em] text-white uppercase">
               Updating brief instructions... / Loading CDs / etc...
             </div>
-            {/* CTO FIX: replace with final loading illustration assets */}
             <div className="loading-drive" />
             <div className="cd-disc w-44 h-44 rounded-full border-[10px] border-white/90 shadow-[0_0_30px_rgba(255,255,255,0.25)]" />
             <div className="text-white text-sm">{thinkingText}</div>
@@ -178,62 +180,41 @@ export const ResultsPanel = ({
         ) : (
           <div className="h-full flex flex-col gap-10 text-white">
             <div className="flex items-start gap-12">
-              <div className="flex flex-col items-center gap-4 flex-shrink-0" style={{ width: '280px' }}>
-                {/* CTO FIX: replace with final album art + CD case assets */}
-                <div className="relative h-48 w-48 flex items-center justify-center">
+              <div className="flex w-[320px] flex-col items-center gap-4 shrink-0">
+                <div className="relative h-64 w-64 flex items-center justify-center">
                   <img
                     src="/NoteAlbumArt.png"
                     alt="Album art"
-                    className="album-spin is-spinning h-40 w-40 rounded-full object-cover"
+                    className="album-spin is-spinning h-56 w-56 rounded-full object-cover"
                     style={{ animationPlayState: isPlaying ? "running" : "paused" }}
                   />
-                  <img
-                    src="/cd_overlay.png"
-                    alt="CD Overlay"
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
                 </div>
-                <div className="text-center w-full">
-                  <div className="text-xl font-dm truncate px-2">{displaySong?.title || "Select a song"}</div>
-                  <div className="text-xs uppercase tracking-[0.25em] text-white font-exo truncate px-2">
-                    {displaySong?.artist || ""}
-                    {displaySong?.album && (
-                      <>
-                        <span className="mx-2 inline-block h-1 w-1 rounded-full bg-white align-middle" />
-                        {displaySong.album}
-                      </>
-                    )}
+
+                <div className="w-full px-2 text-center h-[54px] flex flex-col justify-center">
+                  <div className="text-xl font-dm truncate whitespace-nowrap overflow-hidden text-ellipsis">
+                    {displayedSong?.title || "Bite Me"}
+                  </div>
+                  <div className="text-xs uppercase tracking-[0.25em] text-white font-exo truncate whitespace-nowrap overflow-hidden text-ellipsis">
+                    {displayedSong?.artist || "ENHYPEN"}
+                    <span className="mx-2 inline-block h-1 w-1 rounded-full bg-white align-middle" />
+                    {displayedSong?.album || "DARK BLOOD"}
                   </div>
                 </div>
-                <div className="w-full" style={{ maxWidth: '280px' }}>
-                  <div 
-                    className="relative h-[3px] bg-white/20 rounded-full cursor-pointer group"
-                    onClick={handleProgressBarClick}
-                    title="Click to seek"
-                  >
-                    <div 
-                      className="absolute left-0 top-0 h-full bg-[#e4ea04] rounded-full transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    />
-                    <div className="absolute inset-0 rounded-full group-hover:bg-white/10 transition-colors" />
+
+                <div className="w-full max-w-xs mt-6">
+                  <div className="relative h-[3px] bg-white/20 rounded-full mb-2">
+                    <div className="absolute left-0 top-0 h-full w-[35%] bg-[#e4ea04] rounded-full" />
                   </div>
-                  <div className="flex items-center justify-between text-xs text-white font-dm mt-2">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>
-                      {duration > 0 ? formatTime(duration) :
-                       (displaySong && songDurations[displaySong.id]) || 
-                       displaySong?.duration || 
-                       "0:00"}
-                    </span>
+                  <div className="flex items-center justify-between text-xs text-white font-dm mb-3">
+                    <span>{formatTime(0)}</span>
+                    <span>{displayedSong?.duration || "2:37"}</span>
                   </div>
-                  <div className="flex items-center justify-center gap-5 mt-4">
-                    <button 
-                      type="button" 
-                      className="text-white/80 hover:text-white"
-                      onClick={previousTrack}
-                    >
+
+                  <div className="flex items-center justify-center gap-5">
+                    <button type="button" className="text-white/80 hover:text-white">
                       <SkipBack className="h-4 w-4" />
                     </button>
+
                     <button
                       type="button"
                       onClick={handlePlayPause}
@@ -241,46 +222,100 @@ export const ResultsPanel = ({
                     >
                       {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     </button>
-                    <button 
-                      type="button" 
-                      className="text-white/80 hover:text-white"
-                      onClick={nextTrack}
-                    >
+
+                    <button type="button" className="text-white/80 hover:text-white">
                       <SkipForward className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div className="flex-1 space-y-6 min-w-0">
+              <div className="flex-1 space-y-6 ml-8 min-h-[500px]">
                 <div className="flex items-start justify-between gap-6">
                   <div className="flex-1 min-w-0">
                     <h2 className="text-3xl font-dm font-normal mb-5">The Details</h2>
-                    
-                    {displaySong?.keywords && displaySong.keywords.length > 0 && (
-                      <div className="flex-col mb-5">
-                        <div className="text-lg font-dm font-normal mb-2">Keywords</div>
-                        <div className="flex gap-2 flex-wrap mt-2">
-                          {displaySong.keywords.slice(0, 5).map((keyword, idx) => (
-                            <Badge 
-                              key={idx}
-                              className="bg-[#2bb7b1] text-white rounded-full px-4 py-1 font-dm font-normal"
-                            >
-                              {keyword}
+
+                    <div className="flex-col mb-5">
+                      <div className="text-lg font-dm font-normal mb-2">Genre</div>
+                      <div className="flex gap-2 flex-wrap mt-2 min-h-[32px] items-start">
+                        {genres.length > 0 ? (
+                          genres.map((genre, idx) => {
+                            const colors = [
+                              "bg-[#2bb7b1]",
+                              "bg-[#7c3aed]",
+                              "bg-[#34d399]",
+                              "bg-[#eab308]",
+                              "bg-[#f59e0b]",
+                            ];
+                            return (
+                              <Badge
+                                key={idx}
+                                className={`${colors[idx % colors.length]} hover:opacity-90 text-white rounded-full px-4 py-1 font-dm font-normal transition-none`}
+                              >
+                                {genre}
+                              </Badge>
+                            );
+                          })
+                        ) : (
+                          <>
+                            <Badge className="bg-[#2bb7b1] hover:bg-[#2bb7b1] text-white rounded-full px-4 py-1 font-dm font-normal transition-none">
+                              Kpop
                             </Badge>
-                          ))}
-                        </div>
+                            <Badge className="bg-[#7c3aed] hover:bg-[#7c3aed] text-white rounded-full px-4 py-1 font-dm font-normal transition-none">
+                              Pop Punk
+                            </Badge>
+                          </>
+                        )}
                       </div>
-                    )}
-                    
+                    </div>
+
+                    <div className="mb-5">
+                      <div className="text-lg font-dm font-normal mb-2">Mood</div>
+                      <div className="flex gap-2 flex-wrap mt-2 min-h-[32px] items-start">
+                        {moods.length > 0 ? (
+                          moods.map((mood, idx) => {
+                            const colors = [
+                              "bg-[#4338ca]",
+                              "bg-[#b45309]",
+                              "bg-[#059669]",
+                              "bg-[#7c2d12]",
+                              "bg-[#581c87]",
+                            ];
+                            return (
+                              <Badge
+                                key={idx}
+                                className={`${colors[idx % colors.length]} hover:opacity-90 text-white rounded-full px-4 py-1 font-dm font-normal transition-none`}
+                              >
+                                {mood}
+                              </Badge>
+                            );
+                          })
+                        ) : (
+                          <>
+                            <Badge className="bg-[#4338ca] hover:bg-[#4338ca] text-white rounded-full px-4 py-1 font-dm font-normal transition-none">
+                              Dark
+                            </Badge>
+                            <Badge className="bg-[#b45309] hover:bg-[#b45309] text-white rounded-full px-4 py-1 font-dm font-normal transition-none">
+                              Suspense
+                            </Badge>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="flex flex-col gap-3 items-end flex-shrink-0" style={{ width: '200px' }}>
-                    <Button size="sm" className="bg-white/10 text-white border border-white/30 hover:bg-white/20 rounded-full px-6 font-exo w-full backdrop-blur-md shadow-[inset_0_1px_10px_rgba(255,255,255,0.12)]">
+
+                  <div className="flex flex-col gap-3 items-end flex-shrink-0" style={{ width: "200px" }}>
+                    <Button
+                      size="sm"
+                      className="bg-white/10 text-white border border-white/30 hover:bg-white/20 rounded-full px-6 font-exo w-full backdrop-blur-md shadow-[inset_0_1px_10px_rgba(255,255,255,0.12)]"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add to Playlist
                     </Button>
-                    <Button size="sm" className="bg-white/10 text-white border border-white/30 hover:bg-white/20 rounded-full px-6 font-exo w-full backdrop-blur-md shadow-[inset_0_1px_10px_rgba(255,255,255,0.12)]">
+                    <Button
+                      size="sm"
+                      className="bg-white/10 text-white border border-white/30 hover:bg-white/20 rounded-full px-6 font-exo w-full backdrop-blur-md shadow-[inset_0_1px_10px_rgba(255,255,255,0.12)]"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add to Pitch Kit
                     </Button>
@@ -289,37 +324,31 @@ export const ResultsPanel = ({
                       <br />
                       Tempo: 105 BPM
                       <br />
-                      Duration: {
-                        (displaySong && songDurations[displaySong.id]) || 
-                        displaySong?.duration || 
-                        "2:38"
-                      }
+                      Duration: {displayedSong?.duration || "2:38"}
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4 text-sm text-white">
-                  <div>
+                  <div className="min-h-[80px]">
                     <div className="text-lg font-dm font-normal mb-2">Collaborators</div>
                     <p className="text-white font-exo">
                       Songwriters: Cirkut, Jason Evigan, David Stewart, Lou-ridz, & Supreme Boi
                     </p>
-                    <p className="text-white font-exo">
-                      Producer: Cirkut & Jason Evigan
-                    </p>
+                    <p className="text-white font-exo">Producer: Cirkut & Jason Evigan</p>
                   </div>
                 </div>
 
-                <div className="items-center gap-3 text-white">
+                <div className="items-center gap-3 text-white min-h-[100px]">
                   <div className="flex italic items-center gap-2 mb-2">
                     <img src="/flower.png" alt="Why" className="h-5 w-5" />
-                    <div className="text-white font-exo text-lg">why this song?</div>
+                    <div className="text-white font-exo text-lg">Why this song?</div>
                   </div>
-                  <div>
+                  <div className="min-h-[60px]">
                     <p className="text-sm text-white font-exo">
-                      “Bite Me” by Enhypen can be used from 00:00-00:35 to represent a
-                      fighter getting ready to go into an intense adventure in the dark
-                      and scary woods.
+                      "{displayedSong?.title || "Bite Me"}" by {displayedSong?.artist || "Enhypen"} can be
+                      used from 00:00-00:35 to represent a fighter getting ready to go into an intense
+                      adventure in the dark and scary woods.
                     </p>
                   </div>
                 </div>
@@ -327,61 +356,75 @@ export const ResultsPanel = ({
             </div>
 
             <div className="rounded-[24px] border border-white/15 bg-[linear-gradient(140deg,rgba(255,255,255,0.08),rgba(0,0,0,0.35))] p-6 mt-3">
-              <div className="text-xl font-dm mb-4">Top 5 Results</div>
+              <div className="text-xl font-dm mb-4">Top 10 Results</div>
               <div className="grid grid-cols-2 gap-5 text-sm text-white">
-                {(searchResults.length > 0 ? searchResults : fallbackSongs).slice(0, 5).map((song, index) => (
-                  <div 
-                    key={song.id} 
-                    className={`flex items-center gap-3 cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-colors ${
-                      selectedSong?.id === song.id ? 'bg-white/10' : ''
-                    }`}
-                    onClick={() => onSongClick?.(song)}
-                  >
-                    <div className="w-6 text-white font-dm">{index + 1}</div>
-                    <div className="h-12 w-12 rounded-md bg-white/10 flex items-center justify-center">
-                      <div className="h-7 w-7 rounded-full border border-white/60" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-white font-dm">{song.title}</div>
-                      <div className="text-xs text-white font-exo">{song.artist}</div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: 10 }).map((_, idx) => (
-                          <span
-                            key={`${song.id}-bar-${idx}`}
-                            className="inline-block w-[3px] rounded-full bg-white/70"
-                            style={{ height: `${6 + (idx % 5) * 3}px` }}
-                          />
-                        ))}
+                {songsToDisplay.slice(0, 10).map((song, index) => {
+                  const isSelected = selectedSong?.id === song.id || (!selectedSong && index === 0);
+
+                  return (
+                    <div
+                      key={song.id}
+                      onClick={() => setSelectedSong(song)}
+                      className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition-all duration-200 ${
+                        isSelected
+                          ? "bg-white/10 ring-2 ring-[#e4ea04]/50 shadow-lg"
+                          : "hover:bg-white/5"
+                      }`}
+                    >
+                      <div className="w-6 text-white font-dm">{index + 1}</div>
+                      <div className="h-12 w-12 rounded-md bg-white/10 flex items-center justify-center">
+                        <div className="h-7 w-7 rounded-full border border-white/60" />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-white font-dm">
-                          {songDurations[song.id] || song.duration || "03:00"}
-                        </span>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              type="button"
-                              className="h-6 w-6 rounded-full border border-white/30 flex items-center justify-center text-[10px]"
-                              aria-label="Track options"
+
+                      <div className="flex-1">
+                        <div className="text-white font-dm">{song.title}</div>
+                        <div className="text-xs text-white font-exo">{song.artist}</div>
+                      </div>
+
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 10 }).map((_, idx) => (
+                            <span
+                              key={`${song.id}-bar-${idx}`}
+                              className="inline-block w-[3px] rounded-full bg-white/70"
+                              style={{ height: `${6 + (idx % 5) * 3}px` }}
+                            />
+                          ))}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-white font-dm">
+                            {songDurations[song.id] || song.duration || "03:00"}
+                          </span>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="h-6 w-6 rounded-full border border-white/30 flex items-center justify-center text-[10px]"
+                                aria-label="Track options"
+                              >
+                                ...
+                              </button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent
+                              align="end"
+                              className="bg-black/80 border border-white/20 text-white p-2 rounded-xl shadow-[0_0_18px_rgba(0,0,0,0.4)]"
                             >
-                              ...
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-black/80 border border-white/20 text-white p-2 rounded-xl shadow-[0_0_18px_rgba(0,0,0,0.4)]">
-                            <DropdownMenuItem className="cursor-pointer focus:bg-white/10 rounded-lg px-3 py-2">
-                              Add to Playlist
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer focus:bg-white/10 rounded-lg px-3 py-2">
-                              Add to Pitch Kit
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <DropdownMenuItem className="cursor-pointer focus:bg-white/10 rounded-lg px-3 py-2">
+                                Add to Playlist
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer focus:bg-white/10 rounded-lg px-3 py-2">
+                                Add to Pitch Kit
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

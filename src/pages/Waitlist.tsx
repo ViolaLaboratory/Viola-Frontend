@@ -365,7 +365,7 @@ const Waitlist = () => {
                     onClick={() => setFormData((prev) => ({ ...prev, teamSize: option.value }))}
                     className={`px-4 py-3 rounded-lg text-sm font-bold transition-all duration-300 ${
                       formData.teamSize === option.value
-                        ? "bg-[#EE481F] text-white shadow-[0_0_15px_rgba(228,234,4,0.4)]"
+                        ? "bg-[#e4ea04]/30 text-white border border-[#e4ea04]/50 shadow-[0_0_15px_rgba(228,234,4,0.4)]"
                         : "bg-white/5 text-white border border-white/20 hover:border-[#EE481F]/50 hover:bg-white/10"
                     }`}
                   >
