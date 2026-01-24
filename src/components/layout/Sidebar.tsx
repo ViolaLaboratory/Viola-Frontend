@@ -7,11 +7,17 @@
  * - Profile photo (bottom)
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Folder, ListMusic, PanelLeft, Wrench } from "lucide-react";
+import { Folder, ListMusic, PanelLeft, Wrench, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getChatHistory, type ChatSession } from "@/services/chatHistoryService";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { getChatHistory, deleteChatSession, type ChatSession } from "@/services/chatHistoryService";
 import { getSidebarCollapsed, setSidebarCollapsed } from "@/services/sidebarStateService";
 
 /* V LOGO COMPONENT: Extracted from original Navigation.tsx */
@@ -108,8 +114,25 @@ export const Sidebar = () => {
   };
 
   /* HANDLER: Resume chat session */
-  const handleChatClick = (sessionId: string) => {
+  const handleChatClick = (sessionId: string, e?: React.MouseEvent) => {
+    // Don't navigate if user is trying to delete (swipe or right-click)
+    if (e?.defaultPrevented) return;
     navigate(`/demo/search/${sessionId}`);
+  };
+
+  /* HANDLER: Delete chat session */
+  const handleDeleteChat = (sessionId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (window.confirm("Are you sure you want to delete this chat? This action cannot be undone.")) {
+      deleteChatSession(sessionId);
+      setChatSessions(getChatHistory());
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event("chatHistoryUpdated"));
+    }
   };
 
   /* HELPER: Check if nav item is active */
@@ -241,19 +264,13 @@ export const Sidebar = () => {
             <div className="flex flex-col gap-1">
               {chatSessions.length > 0 ? (
                 chatSessions.map((session) => (
-                  <button
+                  <ChatItem
                     key={session.id}
-                    onClick={() => handleChatClick(session.id)}
-                    className="rounded-lg px-3 py-2 text-left text-white/80 hover:bg-white/10 transition"
-                    aria-label={`Resume chat: ${session.title}`}
-                  >
-                    <div className="text-sm font-dm truncate text-white">
-                      {session.title}
-                    </div>
-                    <div className="text-xs text-white/50">
-                      {session.resultCount} tracks · {formatRelativeTime(session.updatedAt)}
-                    </div>
-                  </button>
+                    session={session}
+                    onChatClick={handleChatClick}
+                    onDelete={handleDeleteChat}
+                    formatRelativeTime={formatRelativeTime}
+                  />
                 ))
               ) : (
                 <div className="px-3 py-6 text-center text-xs text-white/40">
@@ -292,5 +309,116 @@ export const Sidebar = () => {
         </button>
       </div>
     </aside>
+  );
+};
+
+/* CHAT ITEM COMPONENT: Handles swipe-to-delete and right-click delete */
+interface ChatItemProps {
+  session: ChatSession;
+  onChatClick: (sessionId: string, e?: React.MouseEvent) => void;
+  onDelete: (sessionId: string, e?: React.MouseEvent) => void;
+  formatRelativeTime: (timestamp: number) => string;
+}
+
+const ChatItem = ({ session, onChatClick, onDelete, formatRelativeTime }: ChatItemProps) => {
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const SWIPE_THRESHOLD = 50; // Minimum distance to trigger delete
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const deltaX = currentX - touchStartX.current;
+    const deltaY = currentY - touchStartY.current;
+
+    // Only allow horizontal swipe (swipe right to delete)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) {
+      setSwipeOffset(Math.min(deltaX, 100)); // Cap at 100px
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (swipeOffset >= SWIPE_THRESHOLD) {
+      // Trigger delete
+      onDelete(session.id);
+      setSwipeOffset(0);
+    } else {
+      // Snap back
+      setSwipeOffset(0);
+    }
+    setIsSwiping(false);
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (swipeOffset > 0) {
+      e.preventDefault();
+      return;
+    }
+    onChatClick(session.id, e);
+  };
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          className="relative overflow-hidden rounded-lg"
+          style={{
+            transform: `translateX(${swipeOffset}px)`,
+            transition: isSwiping ? 'none' : 'transform 0.2s ease-out',
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Delete indicator (red background when swiping) */}
+          <div
+            className="absolute inset-0 bg-red-500/20 flex items-center justify-end pr-4"
+            style={{
+              opacity: Math.min(swipeOffset / SWIPE_THRESHOLD, 1),
+            }}
+          >
+            <Trash2 className="h-5 w-5 text-red-400" />
+          </div>
+
+          {/* Chat item content */}
+          <button
+            onClick={handleClick}
+            className="relative w-full rounded-lg px-3 py-2 text-left text-white/80 hover:bg-white/10 transition-colors bg-transparent"
+            aria-label={`Resume chat: ${session.title}`}
+          >
+            <div className="text-sm font-dm truncate text-white">
+              {session.title}
+            </div>
+            <div className="text-xs text-white/50">
+              {session.resultCount} tracks · {formatRelativeTime(session.updatedAt)}
+            </div>
+          </button>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem
+          onClick={(e) => {
+            e.preventDefault();
+            onDelete(session.id, e);
+          }}
+          className="text-red-500 focus:text-red-500"
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete Chat
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 };

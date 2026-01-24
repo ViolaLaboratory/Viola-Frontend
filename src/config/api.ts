@@ -21,6 +21,11 @@ export const API_ENDPOINTS = {
   SONGS_SEARCH: (query: string, page?: number, limit?: number) =>
     `${API_BASE_URL}/music/songs/search/?q=${encodeURIComponent(query)}${page ? `&page=${page}` : ''}${limit ? `&limit=${limit}` : ''}`,
   
+  // User Authentication APIs
+  SEND_VERIFICATION: `${API_BASE_URL}/users/send-verification/`,
+  VERIFY_EMAIL: `${API_BASE_URL}/users/verify-email/`,
+  SIGNUP: `${API_BASE_URL}/users/signup/`,
+  
   // Chatbot API (for music search conversation)
   CHATBOT_CHAT: CHATBOT_API_URL,
   

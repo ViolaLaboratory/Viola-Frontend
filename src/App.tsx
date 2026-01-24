@@ -8,24 +8,34 @@ import Waitlist from "./pages/Waitlist";
 import ThankYou from "./pages/ThankYou";
 import NotFound from "./pages/NotFound";
 import DemoHome from "./pages/DemoHome";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 /* NEW IMPORTS: Layout and pages for demo */
 import { AppLayout } from "./components/layout/AppLayout";
 import { SearchInterface } from "./components/SearchInterface";
 import { PitchBuilder } from "./components/PitchBuilder";
 import { MusicCatalog } from "./components/MusicCatalog";
+import { MusicPlayerProvider } from "./contexts/MusicPlayerContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+      <MusicPlayerProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
         <Routes>
           {/* LANDING PAGE: Marketing page */}
           <Route path="/" element={<Landing />} />
+
+          {/* LOGIN: Login page */}
+          <Route path="/login" element={<Login />} />
+
+          {/* SIGNUP: Signup page */}
+          <Route path="/signup" element={<Signup />} />
 
           {/* WAITLIST: Signup form */}
           <Route path="/waitlist" element={<Waitlist />} />
@@ -69,6 +79,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </MusicPlayerProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

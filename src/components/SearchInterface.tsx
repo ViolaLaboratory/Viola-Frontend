@@ -25,6 +25,7 @@ import {
   saveChatSession,
   getChatSessionById,
 } from "@/services/chatHistoryService";
+import { useMusicPlayer, type Song as MusicPlayerSong } from "@/contexts/MusicPlayerContext";
 
 interface Song {
   id: number;
@@ -116,9 +117,11 @@ export const SearchInterface = () => {
   );
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [folders, setFolders] = useState<Folder[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentRotation, setCurrentRotation] = useState(0);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  
+  /* Music Player Integration */
+  const { loadSong, isPlaying: playerIsPlaying, togglePlayPause, currentSong } = useMusicPlayer();
 
   /* STATE: Chat session management */
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -309,7 +312,7 @@ export const SearchInterface = () => {
           artist: track.artist || "Unknown Artist",
           album: track.album || "Unknown Album",
           keywords: [track.genre || "Music"],
-          duration: track.duration || "03:00",
+          duration: track.duration || "03:00", // Backend should already format this as MM:SS
         }));
 
         setSearchResults(songs);
@@ -498,6 +501,33 @@ export const SearchInterface = () => {
     setSelectedSong(null);
   };
 
+  const handleSongClick = (song: Song) => {
+    // Convert Song to MusicPlayerSong format
+    const musicPlayerSong: MusicPlayerSong = {
+      id: song.id,
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      duration: song.duration,
+      keywords: song.keywords,
+    };
+    
+    // Get all available songs for the queue
+    const allSongs = searchResults.length > 0 ? searchResults : mockSongs;
+    const queue: MusicPlayerSong[] = allSongs.map(s => ({
+      id: s.id,
+      title: s.title,
+      artist: s.artist,
+      album: s.album,
+      duration: s.duration,
+      keywords: s.keywords,
+    }));
+    
+    // Load the selected song with the queue (but don't auto-play)
+    loadSong(musicPlayerSong, queue);
+    setSelectedSong(song);
+  };
+
   if (showPitchBuilder) {
     return <PitchBuilder />;
   }
@@ -567,10 +597,12 @@ export const SearchInterface = () => {
           isLoading={isLoading}
           showResults={showResults}
           thinkingText={thinkingText}
-          isPlaying={isPlaying}
-          onTogglePlay={() => setIsPlaying((prev) => !prev)}
+          isPlaying={playerIsPlaying}
+          onTogglePlay={togglePlayPause}
           searchResults={searchResults}
           fallbackSongs={mockSongs}
+          selectedSong={currentSong || selectedSong}
+          onSongClick={handleSongClick}
         />
       </div>
 
