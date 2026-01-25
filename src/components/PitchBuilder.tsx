@@ -9,7 +9,7 @@ import {
   DialogDescription,
   DialogFooter 
 } from "@/components/ui/dialog";
-import { CheckCircle2, Loader2, MoreHorizontal, Plus, Pencil, Trash2, ArrowUp, Play, Pause, ThumbsUp, MessageCircle, X, SkipBack, SkipForward } from "lucide-react";
+import { CheckCircle2, Loader2, MoreHorizontal, Plus, Pencil, Trash2, ArrowUp, Play, Pause, ThumbsUp, ThumbsDown, MessageCircle, X, SkipBack, SkipForward, Send, GripVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -138,6 +138,9 @@ export const PitchBuilder = () => {
   const [showAddToFolderDialog, setShowAddToFolderDialog] = useState(false);
   const [selectedSongForFolder, setSelectedSongForFolder] = useState<Song | null>(null);
   const [availableFolders, setAvailableFolders] = useState<Folder[]>([]);
+  const [songFeedback, setSongFeedback] = useState<Record<number, { liked: boolean | null; comment: string }>>({});
+  const [expandedCommentSongId, setExpandedCommentSongId] = useState<number | null>(null);
+  const [commentDraft, setCommentDraft] = useState("");
 
   /* Music Player Integration */
   const { playSong, loadSong, currentSong, isPlaying, togglePlayPause, nextTrack, previousTrack, currentTime, duration, seekTo } = useMusicPlayer();
@@ -342,6 +345,55 @@ export const PitchBuilder = () => {
     
     // Refresh folders to ensure state is in sync
     setFolders(getFolders());
+  };
+
+  // Feedback handlers for client view
+  const handleSetLiked = (songId: number, liked: boolean | null) => {
+    setSongFeedback((prev) => ({
+      ...prev,
+      [songId]: {
+        liked: prev[songId]?.liked === liked ? null : liked, // Toggle off if clicking same
+        comment: prev[songId]?.comment || "",
+      },
+    }));
+  };
+
+  const handleToggleComment = (songId: number) => {
+    if (expandedCommentSongId === songId) {
+      // Save and close
+      setSongFeedback((prev) => ({
+        ...prev,
+        [songId]: {
+          liked: prev[songId]?.liked ?? null,
+          comment: commentDraft,
+        },
+      }));
+      setExpandedCommentSongId(null);
+      setCommentDraft("");
+    } else {
+      // Open for this song
+      setCommentDraft(songFeedback[songId]?.comment || "");
+      setExpandedCommentSongId(songId);
+    }
+  };
+
+  const handleSaveComment = (songId: number) => {
+    setSongFeedback((prev) => ({
+      ...prev,
+      [songId]: {
+        liked: prev[songId]?.liked ?? null,
+        comment: commentDraft,
+      },
+    }));
+    setExpandedCommentSongId(null);
+    setCommentDraft("");
+  };
+
+  // Calculate feedback stats
+  const feedbackStats = {
+    likes: Object.values(songFeedback).filter((f) => f?.liked === true).length,
+    dislikes: Object.values(songFeedback).filter((f) => f?.liked === false).length,
+    comments: Object.values(songFeedback).filter((f) => f?.comment).length,
   };
 
   // Load folders when add to folder dialog opens
@@ -724,7 +776,7 @@ export const PitchBuilder = () => {
               <img
                 src="/vynl.png"
                 alt="Vinyl"
-                className="pointer-events-none absolute right-[-120px] top-0 w-[680px] opacity-90 drop-shadow-[0_0_45px_rgba(0,0,0,0.55)]"
+                className="pointer-events-none invert absolute place-self-center grayscale top-12 w-[680px] opacity-90 saturate-0 rotate-8 brightness-150 z-0"
               />
               <div className="relative z-10 h-full pr-6 overflow-y-auto">
                 <div className="flex items-start justify-between gap-6">
@@ -756,7 +808,7 @@ export const PitchBuilder = () => {
                         className="bg-white/5 text-white border border-white/25 hover:bg-white/15 rounded-full px-5 font-dm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-[0_0_0_1px_rgba(255,255,255,0.12)]"
                         onClick={() => setViewMode("link")}
                       >
-                        View Results
+                        Client View
                       </Button>
                     ) : (
                       <Button
@@ -790,6 +842,34 @@ export const PitchBuilder = () => {
                 </div>
               </div>
 
+              {viewMode === "builder" && (
+                <div className="mt-6 flex items-center gap-4">
+                  <div className="rounded-2xl border border-white/10 bg-black/35 px-4 py-3 flex items-center backdrop-blur-md gap-6">
+                    <span className="text-sm text-white">Client Feedback</span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                          <ThumbsUp className="h-4 w-4 text-emerald-300" />
+                        </div>
+                        <span className="text-lg font-dm text-white">{feedbackStats.likes}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-red-500/20 flex items-center justify-center">
+                          <ThumbsDown className="h-4 w-4 text-red-300" />
+                        </div>
+                        <span className="text-lg font-dm text-white">{feedbackStats.dislikes}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                          <MessageCircle className="h-4 w-4 text-blue-300" />
+                        </div>
+                        <span className="text-lg font-dm text-white">{feedbackStats.comments}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="mt-6 w-full max-w-[820px] space-y-6">
                 <div className="relative rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,18,0.75),rgba(10,10,12,0.85))] p-6 shadow-[0_0_28px_rgba(0,0,0,0.45)] backdrop-blur-xl">
                   <div className="text-sm text-white/60">Prepared for {clientName || "Client"}</div>
@@ -797,8 +877,12 @@ export const PitchBuilder = () => {
                   <div className="mt-4 rounded-2xl bg-white/10 p-4 text-sm text-white/70">
                     {clientDescription}
                   </div>
-                  <div className="absolute right-4 top-4 h-12 w-12 rounded-full bg-[#0f1e2e] border border-white/10 flex items-center justify-center text-[10px] font-dm text-[#b5ff4e]">
-                    BMG
+                  <div className="absolute right-4 top-4 h-12 w-12 rounded-full border border-white/10 flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/bmg.png"
+                      alt=""
+                      className="rounded-full w-full h-full object-cover"
+                    />
                   </div>
 
                   <div className="mt-5 space-y-3">
@@ -822,91 +906,213 @@ export const PitchBuilder = () => {
                           };
 
                           return (
-                          <div
-                            key={song.id}
-                            className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors"
-                            onClick={() => {
-                              // Create queue from all songs in the folder
-                              const queue: MusicPlayerSong[] = recommendedSongs.map(s => ({
-                                id: s.id,
-                                title: s.title,
-                                artist: s.artist,
-                                album: s.album,
-                                duration: s.duration,
-                                keywords: s.keywords || [],
-                                thumbnail: s.thumbnail,
-                              }));
-                              playSong(musicPlayerSong, queue);
-                            }}
-                          >
-                            <button
-                              type="button"
-                              className="flex h-12 w-12 items-center justify-center rounded-md bg-white text-black hover:bg-white/90 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const queue: MusicPlayerSong[] = recommendedSongs.map(s => ({
-                                  id: s.id,
-                                  title: s.title,
-                                  artist: s.artist,
-                                  album: s.album,
-                                  duration: s.duration,
-                                  keywords: s.keywords || [],
-                                  thumbnail: s.thumbnail,
-                                }));
-                                playSong(musicPlayerSong, queue);
-                              }}
-                            >
-                              <Play className="h-5 w-5" />
-                            </button>
-                            <div className="flex-1 min-w-0 max-w-[200px]">
-                              <div className="text-white break-words line-clamp-2 text-sm" style={{ wordBreak: 'break-word' }}>
-                                {song.title.length > 22 ? song.title.substring(0, 22) + '...' : song.title}
-                              </div>
-                              <div className="text-white/50 text-xs truncate">{song.artist}</div>
-                              <div className="text-white/40 text-xs truncate">{song.album}</div>
-                            </div>
-                            <div className="text-sm text-white/70 font-dm w-14 text-right">
-                              {songDurations[song.id] || song.duration || "03:00"}
-                            </div>
-                            {viewMode === "link" ? (
-                              <div className="flex items-center gap-2">
-                                <button className="h-7 w-7 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
-                                  <ThumbsUp className="h-3 w-3" />
-                                </button>
-                                <button className="h-7 w-7 rounded-full bg-white/10 text-white/70 flex items-center justify-center">
-                                  <MessageCircle className="h-3 w-3" />
-                                </button>
-                                <button className="h-7 w-7 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center">
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-3 text-xs text-white/60">
-                                <span>See More...</span>
+                            <div key={song.id} className="space-y-0">
+                              <div
+                                className={`flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 ${
+                                  expandedCommentSongId === song.id
+                                    ? "rounded-b-none border-b-0"
+                                    : ""
+                                }`}
+                              >
                                 <button
                                   type="button"
-                                  className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-black hover:bg-white/90 transition-colors"
-                                  aria-label="Add track to another folder"
+                                  className="flex h-12 w-12 items-center justify-center rounded-md bg-white text-black"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setSelectedSongForFolder(song);
-                                    setShowAddToFolderDialog(true);
+                                    const queue: MusicPlayerSong[] = recommendedSongs.map(s => ({
+                                      id: s.id,
+                                      title: s.title,
+                                      artist: s.artist,
+                                      album: s.album,
+                                      duration: s.duration,
+                                      keywords: s.keywords || [],
+                                      thumbnail: s.thumbnail,
+                                    }));
+                                    playSong(musicPlayerSong, queue);
                                   }}
                                 >
-                                  <Plus className="h-3 w-3" />
+                                  {currentSong?.id === song.id && isPlaying ? (
+                                    <Pause className="h-5 w-5" />
+                                  ) : (
+                                    <Play className="h-5 w-5" />
+                                  )}
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveTrackFromFolder(song.id)}
-                                  className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-black"
-                                  aria-label="Remove track"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-white">{song.title}</div>
+                                  <div className="text-white/50 text-xs">{song.artist}</div>
+                                  <div className="text-white/40 text-xs">{song.album}</div>
+                                </div>
+                                <div className="text-sm text-white/70 font-dm w-14 text-right">
+                                  {songDurations[song.id] || song.duration || "03:00"}
+                                </div>
+                                {viewMode === "link" ? (
+                                  <div className="flex items-center gap-1">
+                                    {/* Like/Dislike toggle group */}
+                                    <div className="flex items-center rounded-full border border-white/10 overflow-hidden">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleSetLiked(song.id, true);
+                                        }}
+                                        className={`h-8 w-10 flex items-center justify-center transition ${
+                                          songFeedback[song.id]?.liked === true
+                                            ? "bg-emerald-500 text-white"
+                                            : "bg-white/5 text-white/50 hover:bg-white/10"
+                                        }`}
+                                      >
+                                        <ThumbsUp className="h-3.5 w-3.5" />
+                                      </button>
+                                      <div className="w-px h-5 bg-white/10" />
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleSetLiked(song.id, false);
+                                        }}
+                                        className={`h-8 w-10 flex items-center justify-center transition ${
+                                          songFeedback[song.id]?.liked === false
+                                            ? "bg-red-500 text-white"
+                                            : "bg-white/5 text-white/50 hover:bg-white/10"
+                                        }`}
+                                      >
+                                        <ThumbsDown className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                    {/* Comment button */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleToggleComment(song.id);
+                                      }}
+                                      className={`h-8 w-10 rounded-full flex items-center justify-center transition ${
+                                        songFeedback[song.id]?.comment ||
+                                        expandedCommentSongId === song.id
+                                          ? "bg-blue-500 text-white"
+                                          : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/10"
+                                      }`}
+                                    >
+                                      <MessageCircle className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 text-xs text-white/60">
+                                    {/* Feedback indicators in builder mode */}
+                                    {(songFeedback[song.id]?.liked !== null &&
+                                      songFeedback[song.id]?.liked !== undefined) ||
+                                    songFeedback[song.id]?.comment ? (
+                                      <div className="flex items-center gap-2 mr-2">
+                                        {songFeedback[song.id]?.liked === true && (
+                                          <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                            <ThumbsUp className="h-4 w-4 text-emerald-300" />
+                                          </div>
+                                        )}
+                                        {songFeedback[song.id]?.liked === false && (
+                                          <div className="h-8 w-8 rounded-full bg-red-500/20 flex items-center justify-center">
+                                            <ThumbsDown className="h-4 w-4 text-red-300" />
+                                          </div>
+                                        )}
+                                        {songFeedback[song.id]?.comment && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setExpandedCommentSongId(
+                                                expandedCommentSongId === song.id ? null : song.id
+                                              );
+                                            }}
+                                            className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center hover:bg-blue-500/40 transition"
+                                            title="View comment"
+                                          >
+                                            <MessageCircle className="h-4 w-4 text-blue-300" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    ) : null}
+                                    <button
+                                      type="button"
+                                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 cursor-grab"
+                                      aria-label="Drag to reorder"
+                                    >
+                                      <GripVertical className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20"
+                                      aria-label="Add track to another folder"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedSongForFolder(song);
+                                        setShowAddToFolderDialog(true);
+                                      }}
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemoveTrackFromFolder(song.id);
+                                      }}
+                                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-black"
+                                      aria-label="Remove track"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        );
+                              {/* Inline comment section */}
+                              {expandedCommentSongId === song.id && (
+                                <div className="rounded-b-2xl border border-white/10 border-t-0 bg-white/5 px-4 py-3">
+                                  {viewMode === "builder" ? (
+                                    /* Read-only comment view for builder */
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex-1">
+                                        <div className="text-xs text-white/50 mb-2">Client's comment:</div>
+                                        <div className="rounded-xl bg-white/10 px-3 py-2 text-sm text-white/90">
+                                          {songFeedback[song.id]?.comment || "No comment yet."}
+                                        </div>
+                                      </div>
+                                      <button
+                                        onClick={() => setExpandedCommentSongId(null)}
+                                        className="h-9 px-4 rounded-full bg-white/10 text-white/70 text-sm hover:bg-white/20 transition"
+                                      >
+                                        Close
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    /* Editable comment for client view */
+                                    <div className="flex gap-3">
+                                      <textarea
+                                        value={commentDraft}
+                                        onChange={(e) => setCommentDraft(e.target.value)}
+                                        placeholder="Leave your feedback..."
+                                        className="flex-1 h-20 rounded-xl bg-white/10 px-3 py-2 text-sm text-white border border-white/10 placeholder:text-white/40 focus:border-white/30 focus:outline-none resize-none"
+                                        autoFocus
+                                      />
+                                      <div className="flex flex-col gap-2">
+                                        <button
+                                          onClick={() => handleSaveComment(song.id)}
+                                          className="h-9 px-4 rounded-full bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition flex items-center gap-2"
+                                        >
+                                          <Send className="h-3.5 w-3.5" />
+                                          Save
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setExpandedCommentSongId(null);
+                                            setCommentDraft("");
+                                          }}
+                                          className="h-9 px-4 rounded-full bg-white/10 text-white/70 text-sm hover:bg-white/20 transition"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
                         })}
                       </div>
                     ) : (
