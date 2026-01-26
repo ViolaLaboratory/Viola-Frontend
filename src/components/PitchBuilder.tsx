@@ -578,19 +578,14 @@ export const PitchBuilder = () => {
       
       console.log(`ZIP file generated: ${blob.size} bytes, containing ${mp3Count} MP3 files and ${zipFiles.length} total files`);
       
-      // Show user feedback
-      if (mp3Count > 0) {
-        toast({
-          title: "Export Successful",
-          description: `Exported ${mp3Count} MP3 file${mp3Count !== 1 ? 's' : ''} and ${folder.trackIds.length} metadata file${folder.trackIds.length !== 1 ? 's' : ''}.`,
-        });
-      } else {
-        toast({
-          title: "Export Warning",
-          description: "Metadata files exported, but MP3 files could not be downloaded. Check console for details.",
-          variant: "destructive",
-        });
-      }
+          // Show user feedback
+          if (mp3Count > 0) {
+            toast({
+              title: "Export Successful",
+              description: `Exported ${mp3Count} MP3 file${mp3Count !== 1 ? 's' : ''} and ${folder.trackIds.length} metadata file${folder.trackIds.length !== 1 ? 's' : ''}.`,
+            });
+          }
+          // Temporarily removed export warning
       
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -876,13 +871,6 @@ export const PitchBuilder = () => {
                   <div className="text-xl font-dm text-white">{clientProject || "Project Name"}</div>
                   <div className="mt-4 rounded-2xl bg-white/10 p-4 text-sm text-white/70">
                     {clientDescription}
-                  </div>
-                  <div className="absolute right-4 top-4 h-12 w-12 rounded-full border border-white/10 flex items-center justify-center overflow-hidden">
-                    <img
-                      src="/bmg.png"
-                      alt=""
-                      className="rounded-full w-full h-full object-cover"
-                    />
                   </div>
 
                   <div className="mt-5 space-y-3">

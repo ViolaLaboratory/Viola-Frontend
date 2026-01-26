@@ -301,7 +301,7 @@ export const Sidebar = () => {
           </div>
           {!isCollapsed && (
             <div className="text-left">
-              <div className="text-sm font-dm text-white">Sarah Lastname</div>
+              <div className="text-sm font-dm text-white">Michael Smith</div>
               <div className="text-xs text-white/50">Pro plan</div>
             </div>
           )}

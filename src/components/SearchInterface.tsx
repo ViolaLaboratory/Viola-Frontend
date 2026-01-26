@@ -82,6 +82,51 @@ const mockSongs: Song[] = [
     keywords: ["Darkwave", "Ethereal", "Cold", "Electronic"],
     duration: "03:58",
   },
+  {
+    id: 6,
+    title: "Whispers in the Dark",
+    artist: "Echo Chamber",
+    album: "Nocturnal Visions",
+
+    keywords: ["Ambient", "Mysterious", "Ethereal", "Dark"],
+    duration: "04:32",
+  },
+  {
+    id: 7,
+    title: "Shadow Path",
+    artist: "Luna Obscura",
+    album: "Midnight Tales",
+
+    keywords: ["Cinematic", "Tense", "Atmospheric", "Eerie"],
+    duration: "05:18",
+  },
+  {
+    id: 8,
+    title: "The Hunt Begins",
+    artist: "Thorn & Thistle",
+    album: "Wilderness Calls",
+
+    keywords: ["Suspenseful", "Dark", "Pulsing", "Intense"],
+    duration: "03:47",
+  },
+  {
+    id: 9,
+    title: "Beneath the Canopy",
+    artist: "Moss & Stone",
+    album: "Forest Echoes",
+
+    keywords: ["Natural", "Ambient", "Mysterious", "Organic"],
+    duration: "04:56",
+  },
+  {
+    id: 10,
+    title: "Nightfall Pursuit",
+    artist: "Crimson Veil",
+    album: "Twilight Hours",
+
+    keywords: ["Dark", "Urgent", "Cinematic", "Suspenseful"],
+    duration: "03:41",
+  },
 ];
 
 const typingPhrases = [
